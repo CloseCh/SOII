@@ -3,6 +3,7 @@
 
 
 int main(int argc, char **argv){
+
     //montar el dispositivo virtual
     bmount(argv[1]);
     //inicializar a 0s el fichero usado como dispositivo virtual
