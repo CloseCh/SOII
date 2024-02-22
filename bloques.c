@@ -56,7 +56,7 @@ int bwrite(unsigned int nbloque, const void *buf){
     int desplazamiento = nbloque * BLOCKSIZE;
 
     //movemos el puntero del fichero en el offset correcto
-    lseek(descriptor, desplazamiento, nbloque);
+    lseek(descriptor, desplazamiento, SEEK_SET);
 
     //volcamos el contenido del buffer en la posicion del dv
     if (write(descriptor, buf, BLOCKSIZE) != BLOCKSIZE){
@@ -85,7 +85,7 @@ int bread(unsigned int nbloque, void *buf){
     int desplazamiento = nbloque * BLOCKSIZE;
 
     // movemos el puntero del fichero en el offset correcto
-    lseek(descriptor, desplazamiento, nbloque);
+    lseek(descriptor, desplazamiento, SEEK_SET);
 
     if (read(descriptor, buf, BLOCKSIZE) != BLOCKSIZE){
         perror(RED "Error"); printf(RESET);
