@@ -6,27 +6,35 @@ struct inodo inodos [BLOCKSIZE/INODOSIZE];
 /*
  * Function: tamMB
  * ----------------------------
- *   ---
+ *   Calcula el tamaño en bloques necesario para el mapa de bits.
  *   
- *   unsigned int nbloques: ---
+ *   unsigned int nbloques: cantidad de bloques
  *
  *   returns: ---
  */
 int tamMB(unsigned int nbloques){
+    int tamMB=(nbloques/8)/BLOCKSIZE;
+    if ((nbloques/8)%BLOCKSIZE!=0){ //mirar si se requiere un bloque extra
+    }
+    return tamMB;
 
 }
 
 /*
  * Function: tamAI
  * ----------------------------
- *   ---
+ *   Calcula el tamaño en bloques necesario para el array de inodos.
  *   
- *   unsigned int ninodos: ---
+ *   unsigned int ninodos: cantidad de inodos
  *
  *   returns: ---
  */
 int tamAI(unsigned int ninodos){
-
+    int tamAI=(ninodos*INODOSIZE)/BLOCKSIZE;
+    if ((ninodos*INODOSIZE)%BLOCKSIZE!=0){ //mirar si se requiere un bloque extra
+       return tamAI+1;
+    }
+    return tamAI;
 }
 
 /*
