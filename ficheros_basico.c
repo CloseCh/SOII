@@ -15,6 +15,7 @@ struct inodo inodos [BLOCKSIZE/INODOSIZE];
 int tamMB(unsigned int nbloques){
     int tamMB=(nbloques/8)/BLOCKSIZE;
     if ((nbloques/8)%BLOCKSIZE!=0){ //mirar si se requiere un bloque extra
+        return tamMB+1;
     }
     return tamMB;
 
