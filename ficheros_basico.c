@@ -18,7 +18,6 @@ int tamMB(unsigned int nbloques){
         return tamMB+1;
     }
     return tamMB;
-
 }
 
 /*
@@ -41,7 +40,8 @@ int tamAI(unsigned int ninodos){
 /*
  * Function: initSB
  * ----------------------------
- *   ---
+ *   Inicializamos el superbloque con los valores iniciales y pasados 
+ *   por parametro.
  *   
  *   unsigned int nbloques: ---
  *  
@@ -50,7 +50,19 @@ int tamAI(unsigned int ninodos){
  *   returns: ---
  */
 int initSB(unsigned int nbloques, unsigned int ninodos){
-
+    //Ponemos el valor inicial a cada atributo del objeto SB
+    SB->posPrimerBloqueMB=posSB+tamSB;
+    SB->posUltimoBloqueMB=SB->posUltimoBloqueMB+tamMB(nbloques)-1;
+    SB->posPrimerBloqueAI=SB->posUltimoBloqueMB+1;
+    SB->posUltimoBloqueAI=SB->posPrimerBloqueAI+tamAI(ninodos)-1;
+    SB->posPrimerBloqueDatos=SB->posUltimoBloqueAI+1;
+    SB->posUltimoBloqueDatos=nbloques-1;
+    SB->posInodoRaiz=0;
+    SB->posPrimerInodoLibre=0;
+    SB->cantBloquesLibres=nbloques;
+    SB->cantInodosLibres=ninodos;
+    SB->totBloques=nbloques;
+    SB->totInodos=ninodos;
 }
 
 /*
@@ -61,6 +73,28 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
  *   returns: ---
  */
 int initMB(){
+    char bufferMB[BLOCKSIZE/8];
+    //Creamos una variable que contenga el tamaño de los metadatos
+    int tamt=tamSB+tamMB+tamAI;
+    for (int i = 0; i < (tamt)/8; i++){
+        //Ponemos 1111111 en cada bloque
+        bufferMB[i]=255;
+    }
+    int sobra=tamt%8;
+    char cont=0;
+    //Los 1s restantes se colocaran en la siguiente posicion
+    //Si tamt%8=3 --> en tamt/8+1 2^7+2^6+2^5
+    while(sobra>0){
+        cont+=2^(8-sobra);
+        sobra--;
+    }
+    bufferMB[tamt/8+1]= cont;
+    //Rellenamos el resto con 0s
+    for (int i = tamt/8+2; i < BLOCKSIZE/8; i++){
+        bufferMB[i]=0;
+    }
+    //Falta salvar el bufferMB en la posición correspondiente
+    
 
 }
 
