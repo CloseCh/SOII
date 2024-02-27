@@ -12,9 +12,9 @@ int main(int argc, char **argv){
 
     unsigned char buf[BLOCKSIZE];
 
-    memset(buf, '\0', sizeof(char)); // '\0' o '0'
+    memset(buf, '\0', BLOCKSIZE); // '\0' o '0'
 
-    for(int i = 0; i < nbloques-2; i++){
+    for(int i = 0; i < nbloques; i++){
         bwrite(i, buf); //escribir el bloque en el buffer
     }
 
