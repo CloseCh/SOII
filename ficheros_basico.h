@@ -63,54 +63,137 @@ struct inodo {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
 /*
  * Function: tamMB
  * ----------------------------
- *   Calcula el tamaño en bloques necesario para el mapa de bits.
+ *  Calcula el tamaño en bloques necesario para el mapa de bits.
  *   
- *   unsigned int nbloques: cantidad de bloques.
+ *  unsigned int nbloques: cantidad de bloques.
  *
- *   returns: Tamaño del mapa de bits.
+ *  returns: Tamaño del mapa de bits.
  */
 int tamMB(unsigned int nbloques);
 
 /*
  * Function: tamAI
  * ----------------------------
- *   Calcula el tamaño en bloques necesario para el array de inodos.
+ *  Calcula el tamaño en bloques necesario para el array de inodos.
  *   
- *   unsigned int ninodos: cantidad de inodos
+ *  unsigned int ninodos: cantidad de inodos
  *
- *   returns: Tamaño del array de inodos.
+ *  returns: Tamaño del array de inodos.
  */
 int tamAI(unsigned int ninodos);
 
 /*
  * Function: initSB
  * ----------------------------
- *   Inicializamos el superbloque con los valores iniciales y pasados 
- *   por parametro.
+ *  Inicializamos el superbloque con los valores iniciales y pasados 
+ *  por parametro.
  *   
- *   unsigned int nbloques: Numero de bloque.
+ *  unsigned int nbloques: Numero de bloque.
  *  
- *   unsigned int ninodos: 
+ *  unsigned int ninodos: 
  *
- *   returns: -1 error de lectura sobre el bloque SB, 0 si todo va bien.
+ *  returns: -1 error de lectura sobre el bloque SB, 0 si todo va bien.
  */
 int initSB(unsigned int nbloques, unsigned int ninodos);
 
 /*
  * Function: initMB
  * ----------------------------
- *   Inicializa el mapa de bits poniendo a 1 los bits que representan los 
- *   metadatos.
+ *  Inicializa el mapa de bits poniendo a 1 los bits que representan los 
+ *  metadatos.
  *
- *   returns: -1 si error de escritura o lectura, 0 correcto todo.
+ *  returns: -1 si error de escritura o lectura, 0 correcto todo.
  */
 int initMB();
 
 /*
  * Function: initAI
  * ----------------------------
- *   se encargará de inicializar la lista de inodos libres
+ *  se encargará de inicializar la lista de inodos libres
  *
- *   returns: -1 si fallo de lectura o escritura de bloque, 0 si todo va bien.
+ *  returns: -1 si fallo de lectura o escritura de bloque, 0 si todo va bien.
  */
 int initAI();
+
+/*
+ * Function: escribir_bit
+ * ----------------------------
+ *  ---
+ *   
+ *  unsigned int nbloques: Numero de bloque.
+ *  
+ *  unsigned int bit: ---
+ *
+ *  returns: ---
+ */
+int escribir_bit(unsigned int nbloque, unsigned int bit);
+
+/*
+ * Function: leer_bit
+ * ----------------------------
+ *  ---
+ *   
+ *  unsigned int nbloques: Numero de bloque.
+ *
+ *  returns: ---
+ */
+char leer_bit(unsigned int nbloque);
+
+/*
+ * Function: reservar_bloque
+ * ----------------------------
+ *  ---
+ *
+ *  returns: ---
+ */
+int reservar_bloque();
+
+/*
+ * Function: liberar_bloque
+ * ----------------------------
+ *  ---
+ *   
+ *  unsigned int nbloques: Numero de bloque.
+ * 
+ *  returns: ---
+ */
+int liberar_bloque(unsigned int nbloque);
+
+/*
+ * Function: escribir_inodo
+ * ----------------------------
+ *  ---
+ *   
+ *  unsigned int ninodo: Numero de ninodo.
+ *  
+ *  unsigned inodo *inodo: ---
+ * 
+ *  returns: ---
+ */
+int escribir_inodo(unsigned int ninodo, struct inodo *inodo);
+
+/*
+ * Function: leer_inodo
+ * ----------------------------
+ *  ---
+ *   
+ *  unsigned int ninodo: Numero de ninodo.
+ *  
+ *  unsigned inodo *inodo: ---
+ * 
+ *  returns: ---
+ */
+int leer_inodo(unsigned int ninodo, struct inodo *inodo);
+
+/*
+ * Function: reservar_inodo
+ * ----------------------------
+ *  ---
+ *   
+ *  unsigned char tipo: Numero de ninodo.
+ *  
+ *  unsigned char permisos: ---
+ * 
+ *  returns: ---
+ */
+int reservar_inodo(unsigned char tipo, unsigned char permisos);

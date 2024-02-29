@@ -1,5 +1,9 @@
 #include "ficheros_basico.h"
 
+/*****************************************************************************************/
+/*                                       NIVEL 2                                         */
+/*****************************************************************************************/
+
 int tamMB(unsigned int nbloques){
     int tamMB = (nbloques / 8) / BLOCKSIZE;
     if ((nbloques / 8) % BLOCKSIZE != 0){ //mirar si se requiere un bloque extra
@@ -130,4 +134,37 @@ int initAI(){
     }
 
     return EXITO;
+}
+
+
+/*****************************************************************************************/
+/*                                       NIVEL 3                                         */
+/*****************************************************************************************/
+
+int escribir_bit(unsigned int nbloque, unsigned int bit){
+
+}
+
+char leer_bit(unsigned int nbloque){
+
+}
+
+int reservar_bloque(){
+
+}
+
+int liberar_bloque(unsigned int nbloque){
+
+}
+
+int escribir_inodo(unsigned int ninodo, struct inodo *inodo){
+
+}
+
+int leer_inodo(unsigned int ninodo, struct inodo *inodo){
+
+}
+
+int reservar_inodo(unsigned char tipo, unsigned char permisos){
+    
 }
