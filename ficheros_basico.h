@@ -60,9 +60,57 @@ struct inodo {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
     // Fijarse que también se resta lo que ocupen las variables de alineación utilizadas!!!
 };
 
-
+/*
+ * Function: tamMB
+ * ----------------------------
+ *   Calcula el tamaño en bloques necesario para el mapa de bits.
+ *   
+ *   unsigned int nbloques: cantidad de bloques.
+ *
+ *   returns: Tamaño del mapa de bits.
+ */
 int tamMB(unsigned int nbloques);
+
+/*
+ * Function: tamAI
+ * ----------------------------
+ *   Calcula el tamaño en bloques necesario para el array de inodos.
+ *   
+ *   unsigned int ninodos: cantidad de inodos
+ *
+ *   returns: Tamaño del array de inodos.
+ */
 int tamAI(unsigned int ninodos);
+
+/*
+ * Function: initSB
+ * ----------------------------
+ *   Inicializamos el superbloque con los valores iniciales y pasados 
+ *   por parametro.
+ *   
+ *   unsigned int nbloques: Numero de bloque.
+ *  
+ *   unsigned int ninodos: 
+ *
+ *   returns: -1 error de lectura sobre el bloque SB, 0 si todo va bien.
+ */
 int initSB(unsigned int nbloques, unsigned int ninodos);
+
+/*
+ * Function: initMB
+ * ----------------------------
+ *   Inicializa el mapa de bits poniendo a 1 los bits que representan los 
+ *   metadatos.
+ *
+ *   returns: -1 si error de escritura o lectura, 0 correcto todo.
+ */
 int initMB();
+
+/*
+ * Function: initAI
+ * ----------------------------
+ *   se encargará de inicializar la lista de inodos libres
+ *
+ *   returns: -1 si fallo de lectura o escritura de bloque, 0 si todo va bien.
+ */
 int initAI();

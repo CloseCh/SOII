@@ -1,6 +1,5 @@
 // bloques.h
 
-
 #include <stdio.h>  //printf(), fprintf(), stderr, stdout, stdin
 #include <fcntl.h> //O_WRONLY, O_CREAT, O_TRUNC
 #include <sys/stat.h> //S_IRUSR, S_IWUSR
@@ -35,8 +34,56 @@
 
 #define NEGRITA "\x1b[1m"
 
-
+/*
+ * Function: bmount
+ * ----------------------------
+ *   Función para montar el dispositivo virtual, dado que se consta de un 
+ *   fichero, esta funcion consiste en abrir lo.
+ *
+ *   const char *camino: puntero a un array de tipo char con la localización 
+ *   del fichero.
+ *
+ *   returns: descriptor del fichero si todo va bien, -1 si error.
+ */
 int bmount(const char *camino);
+
+/*
+ * Function: bumount
+ * ----------------------------
+ *   Llamar a la función close() para liberar el espacio ocupado por el 
+ *   descriptor de fichero.
+ *
+ *   returns: 0 si ha ido todo bien, -1 si error.
+ */
 int bumount();
+
+/*
+ * Function: bwrite
+ * ----------------------------
+ *   Escribe 1 bloque en el dispositivo virtual, en el bloque físico 
+ *   especificado por nbloque.
+ *
+ *   unsigned int nbloque: indica la posicion del dispositivo virtual a 
+ *   introducir el contenido.
+ *   const void *buf: puntero hacia el contenido de un buffer de memoria a
+ *   volcar. 
+ *
+ *   returns: tamaño del bloque si todo va bien, -1 si error.
+ */
 int bwrite(unsigned int nbloque, const void *buf);
+
+/*
+ * Function: bread
+ * ----------------------------
+ *   Lee 1 bloque del dispositivo virtual, que se corresponde con el bloque
+ *   físico especificado por nbloque
+ *   
+ *   unsigned int nbloque: especifica el bloque a realizar la lectura.
+ * 
+ *   void *buf: puntero hacia los nbytes (BLOCKSIZE) contenidos a partir de 
+ *   la posición (nº de byte) del dispositivo virtual correspondiente al nº de 
+ *   bloque. Este contenido es el que se vuelca en un buffer de memoria.
+ *
+ *   returns: tamaño del bloque si todo va bien, -1 si error.
+ */
 int bread(unsigned int nbloque, void *buf);

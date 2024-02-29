@@ -1,122 +1,110 @@
 #include "ficheros_basico.h"
 
-struct superbloque SB [1];
-struct inodo inodos [BLOCKSIZE/INODOSIZE];
-
-/*
- * Function: tamMB
- * ----------------------------
- *   Calcula el tamaño en bloques necesario para el mapa de bits.
- *   
- *   unsigned int nbloques: cantidad de bloques
- *
- *   returns: ---
- */
 int tamMB(unsigned int nbloques){
-    int tamMB=(nbloques/8)/BLOCKSIZE;
-    if ((nbloques/8)%BLOCKSIZE!=0){ //mirar si se requiere un bloque extra
-        return tamMB+1;
+    int tamMB = (nbloques / 8) / BLOCKSIZE;
+    if ((nbloques / 8) % BLOCKSIZE != 0){ //mirar si se requiere un bloque extra
+        return ++tamMB;
     }
     return tamMB;
 }
 
-/*
- * Function: tamAI
- * ----------------------------
- *   Calcula el tamaño en bloques necesario para el array de inodos.
- *   
- *   unsigned int ninodos: cantidad de inodos
- *
- *   returns: ---
- */
 int tamAI(unsigned int ninodos){
-    int tamAI=(ninodos*INODOSIZE)/BLOCKSIZE;
-    if ((ninodos*INODOSIZE)%BLOCKSIZE!=0){ //mirar si se requiere un bloque extra
-       return tamAI+1;
+    int tamAI = (ninodos * INODOSIZE) / BLOCKSIZE;
+    if ((ninodos * INODOSIZE) % BLOCKSIZE != 0){ //mirar si se requiere un bloque extra
+       return ++tamAI;
     }
     return tamAI;
 }
 
-/*
- * Function: initSB
- * ----------------------------
- *   Inicializamos el superbloque con los valores iniciales y pasados 
- *   por parametro.
- *   
- *   unsigned int nbloques: ---
- *  
- *   unsigned int ninodos: ---
- *
- *   returns: ---
- */
 int initSB(unsigned int nbloques, unsigned int ninodos){
+    struct superbloque SB;
+
     //Ponemos el valor inicial a cada atributo del objeto SB
-    SB->posPrimerBloqueMB=posSB+tamSB;
-    SB->posUltimoBloqueMB=SB->posUltimoBloqueMB+tamMB(nbloques)-1;
-    SB->posPrimerBloqueAI=SB->posUltimoBloqueMB+1;
-    SB->posUltimoBloqueAI=SB->posPrimerBloqueAI+tamAI(ninodos)-1;
-    SB->posPrimerBloqueDatos=SB->posUltimoBloqueAI+1;
-    SB->posUltimoBloqueDatos=nbloques-1;
-    SB->posInodoRaiz=0;
-    SB->posPrimerInodoLibre=0;
-    SB->cantBloquesLibres=nbloques;
-    SB->cantInodosLibres=ninodos;
-    SB->totBloques=nbloques;
-    SB->totInodos=ninodos;
+    //Posisicion del primer bloque del mapa de bits
+    SB.posPrimerBloqueMB       = posSB + tamSB;
+    SB.posUltimoBloqueMB       = SB.posPrimerBloqueMB + tamMB(nbloques)-1;
+    SB.posPrimerBloqueAI       = SB.posUltimoBloqueMB + 1;
+    SB.posUltimoBloqueAI       = SB.posPrimerBloqueAI + tamAI(ninodos)-1;
+    SB.posPrimerBloqueDatos    = SB.posUltimoBloqueAI + 1;
+    SB.posUltimoBloqueDatos    = nbloques-1;
+    SB.posInodoRaiz            = 0;
+    SB.posPrimerInodoLibre     = 0;
+    SB.cantBloquesLibres       = nbloques;
+    SB.cantInodosLibres        = ninodos;
+    SB.totBloques              = nbloques;
+    SB.totInodos               = ninodos;
+    
+    if(bwrite(posSB, &SB) == FALLO) return FALLO;
+    
+    return EXITO;
 }
 
-/*
- * Function: initMB
- * ----------------------------
- *   ---
- *
- *   returns: ---
- */
 int initMB(){
-    char bufferMB[BLOCKSIZE/8];
+    int sizeMB = BLOCKSIZE/8;
+    char bufferMB[sizeMB];
+
+    //Lectura del superbloque
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+
     //Creamos una variable que contenga el tamaño de los metadatos
-    int tamt=tamSB+tamMB+tamAI;
-    for (int i = 0; i < (tamt)/8; i++){
+    int tamt = tamSB + SB.totBloques + SB.totInodos;
+    int sobra = tamt % 8;
+
+    //cantidad de bytes a 1
+    tamt /= 8;
+
+    for (int i = 0; i < tamt; i++){
         //Ponemos 1111111 en cada bloque
-        bufferMB[i]=255;
+        bufferMB[i] = 255;
     }
-    int sobra=tamt%8;
-    char cont=0;
-    //Los 1s restantes se colocaran en la siguiente posicion
-    //Si tamt%8=3 --> en tamt/8+1 2^7+2^6+2^5
-    while(sobra>0){
-        cont+=2^(8-sobra);
-        sobra--;
+
+    
+    //Hay casos en los que puede que no sobre encontes lo contemplamos.
+    if (sobra != 0){
+        char cont = 0;
+        //Los 1s restantes se colocaran en la siguiente posicion
+        //Si tamt%8=3 --> en tamt/8+1 2^7+2^6+2^5
+        while(sobra>0){
+            cont+=2^(8-sobra);
+            sobra--;
+        }
+        
+        bufferMB[tamt + 1] = cont;
+        //Rellenamos el resto con 0s
+        for (int i = tamt + 2; i < sizeMB; i++){
+            bufferMB[i] = 0;
+        }
+    } else {
+        for (int i = tamt + 1; i < sizeMB; i++){
+            bufferMB[i] = 0;
+        }
     }
-    bufferMB[tamt/8+1]= cont;
-    //Rellenamos el resto con 0s
-    for (int i = tamt/8+2; i < BLOCKSIZE/8; i++){
-        bufferMB[i]=0;
-    }
-    //Falta salvar el bufferMB en la posición correspondiente
+
+    //Cambiar el dato del SB.
+    SB.cantBloquesLibres -= tamt-1;
+    
+    //Escribiendo en el disco
+    if(bwrite(SB.posPrimerBloqueMB, bufferMB) == FALLO) return FALLO;
+
+    return EXITO;
+}
+
+int initAI(){
+    struct inodo inodos [BLOCKSIZE/INODOSIZE];
+
+    //Lectura del superbloque
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
     
 
-}
-
-/*
- * Function: initAI
- * ----------------------------
- *   se encargará de inicializar la lista de inodos libres
- *
- *   returns: ---
- */
-int initAI(){
     //si hemos inicializado SB.posPrimerInodoLibre = 0 entonces
-    int contInodos = SB->posPrimerInodoLibre + 1;
+    int contInodos = SB.posPrimerInodoLibre + 1;
 
     //para cada bloque del AI
-    for (int i = SB->posPrimerBloqueAI; i <= SB->posUltimoBloqueAI; i++){
+    for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++){
 
-        unsigned char buf[BLOCKSIZE];
-        if (bread(i,buf) == -1) {
-            perror(RED "Error"); printf(RESET);
-            return FALLO;
-        }
+        if (bread(i,inodos) == -1) return FALLO;
 
         //para cada inodo del bloque
         for (int j = 0; j < BLOCKSIZE/INODOSIZE; j++){ 
@@ -124,7 +112,7 @@ int initAI(){
             inodos[j].tipo = 'l';//libre
 
             //si no hemos llegado al último inodo del AI, entonces
-            if (contInodos < SB->totInodos){
+            if (contInodos < SB.totInodos){
 
                 //enlazamos con el siguiente
                 inodos[j].punterosDirectos[0] = contInodos; 
@@ -138,9 +126,8 @@ int initAI(){
                 break;
             }
         }
-        if (bwrite(i,buf) == -1) {
-            perror(RED "Error"); printf(RESET);
-            return FALLO;
-        }
+        if (bwrite(i,inodos) == -1) return FALLO;
     }
+
+    return EXITO;
 }

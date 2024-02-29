@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "bloques.h"
+#include "ficheros_basico.h"
 
 
 int main(int argc, char **argv){
@@ -17,6 +17,11 @@ int main(int argc, char **argv){
     for(int i = 0; i < nbloques; i++){
         bwrite(i, buf); //escribir el bloque en el buffer
     }
+
+    initSB(nbloques, nbloques/4);
+    initMB();
+    initAI();
+    
 
     //desmontar el dispositivo virtual
     bumount();
