@@ -158,13 +158,66 @@ int liberar_bloque(unsigned int nbloque){
 }
 
 int escribir_inodo(unsigned int ninodo, struct inodo *inodo){
+    struct inodo inodos [BLOCKSIZE/INODOSIZE];
 
+    //Lectura del superbloque
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+
+    //Obtener posición absoluta del dispositivo
+    int nbloqueAI=(ninodo*INODOSIZE)/BLOCKSIZE;
+    int nbloqueabs=nbloqueAI+SB.posPrimerBloqueAI;
+
+    //Lectura bloque en memoria
+    bread(nbloqueabs,inodos);
+
+    //Escribir contenido del inodo en el lugar correspondiente del array
+    int posinodo=ninodo%(BLOCKSIZE/INODOSIZE);
+    inodos[posinodo]=*inodo;
+
+    // escribir bloque modificado en el dispositivo virtual
+    bwrite(nbloqueabs,inodos);
+
+    return EXITO;
 }
 
 int leer_inodo(unsigned int ninodo, struct inodo *inodo){
+    struct inodo inodos [BLOCKSIZE/INODOSIZE];
 
+    //Lectura del superbloque
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+
+    //Obtener posición absoluta del dispositivo
+    int nbloqueAI=(ninodo*INODOSIZE)/BLOCKSIZE;
+    int nbloqueabs=nbloqueAI+SB.posPrimerBloqueAI;
+
+    //Lectura bloque en memoria
+    bread(nbloqueabs,inodos);
+
+    return EXITO;
 }
 
 int reservar_inodo(unsigned char tipo, unsigned char permisos){
-    
+    //Lectura del superbloque
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+
+    //Comprobar si hay inodos libres
+    if(SB.cantInodosLibres < 1) return FALLO;
+
+    //Actualizar lista enlazada de inodos libres
+    int posInodoReservado=SB.posPrimerInodoLibre;
+   
+
+    //Inicializar todos los campos del inodo al que apuntaba inicialmente el superbloque
+
+
+    //Escribir el inodo inicializado en la posición del que era el primer inodo libre
+
+
+    // Decrementar la cantidad de inodos libres y rescribir el superbloque
+    SB.cantInodosLibres--;
+    bwrite(posSB,&SB);
+    return posInodoReservado;
 }
