@@ -115,36 +115,37 @@ int initMB();
  */
 int initAI();
 
-/*
+/* >
  * Function: escribir_bit
  * ----------------------------
- *  ---
+ *  escribe el valor indicado por bit en un bit de MB
  *   
- *  unsigned int nbloques: Numero de bloque.
+ *  unsigned int nbloque: Numero de bloque.
+ * 
  *  
- *  unsigned int bit: ---
+ *  unsigned int bit: 0(libre), 1(ocupado)
  *
- *  returns: ---
+ *  returns: -1 si fallo, 0 si todo va bien
  */
 int escribir_bit(unsigned int nbloque, unsigned int bit);
 
 /*
  * Function: leer_bit
  * ----------------------------
- *  ---
+ *  Lee un bit del MB
  *   
  *  unsigned int nbloques: Numero de bloque.
  *
- *  returns: ---
+ *  returns: Valor del bit leido
  */
 char leer_bit(unsigned int nbloque);
 
 /*
  * Function: reservar_bloque
  * ----------------------------
- *  ---
+ *  Encuentra el primer bloque de MB libre y lo marca
  *
- *  returns: ---
+ *  returns: posicion del bloque, -1 si no encuentra o falla
  */
 int reservar_bloque();
 
