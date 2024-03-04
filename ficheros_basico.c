@@ -276,17 +276,33 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos){
     if(SB.cantInodosLibres < 1) return FALLO;
 
     //Actualizar lista enlazada de inodos libres
-    int posInodoReservado=SB.posPrimerInodoLibre;
-   
+    int posInodoReservado=SB.posPrimerInodoLibre; // unsigned int o simplemente int?
+    struct inodo inodoAux;
+    leer_inodo(posInodoReservado,&inodoAux);
+    SB.posPrimerInodoLibre=inodoAux.punterosDirectos[0];
 
     //Inicializar todos los campos del inodo al que apuntaba inicialmente el superbloque
+    struct inodo nuevoInodo;
+    nuevoInodo.tipo=tipo;
+    nuevoInodo.permisos=permisos;
+    nuevoInodo.nlinks=1;
+    nuevoInodo.tamEnBytesLog=0;
+    nuevoInodo.atime=nuevoInodo.mtime=nuevoInodo.ctime=time(NULL);
+    nuevoInodo.numBloquesOcupados=0;
 
+    for (int i = 0; i < 12; i++) {
+        nuevoInodo.punterosDirectos[i] = 0;
+    }
+
+    for (int i = 0; i < 3; i++) {
+        nuevoInodo.punterosIndirectos[i] = 0;
+    }
 
     //Escribir el inodo inicializado en la posición del que era el primer inodo libre
-
+    if (escribir_inodo(posInodoReservado, &nuevoInodo) == FALLO) return FALLO;
 
     // Decrementar la cantidad de inodos libres y rescribir el superbloque
     SB.cantInodosLibres--;
-    bwrite(posSB,&SB);
+    if(bwrite(posSB,&SB)==FALLO) return FALLO;
     return posInodoReservado;
 }
