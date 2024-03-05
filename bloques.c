@@ -8,8 +8,8 @@ int bmount(const char *camino){
     umask(000);
     //open(camino,oflags,mode)
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
-    if (descriptor == -1) {          
-        perror(RED "Error"); printf(RESET);
+    if (descriptor == -1) {
+        fprintf(stderr, RED"Error: creacion de disco\n"RESET);
         return FALLO;
     }
 
@@ -29,10 +29,11 @@ int bwrite(unsigned int nbloque, const void *buf){
 
     //volcamos el contenido del buffer en la posicion del dv
     int size = write(descriptor, buf, BLOCKSIZE);
-    if (size != BLOCKSIZE){
-        perror(RED "Error"); printf(RESET);
-        return FALLO;
-    }
+
+    /*En cada funcion posterior se escribirá por terminal 
+    de donde proviene*/
+    if (size != BLOCKSIZE) return FALLO;
+    
     return size;
 }
 
@@ -44,9 +45,10 @@ int bread(unsigned int nbloque, void *buf){
     lseek(descriptor, desplazamiento, SEEK_SET);
 
     int size = read(descriptor, buf, BLOCKSIZE);
-    if (size != BLOCKSIZE){
-        perror(RED "Error"); printf(RESET);
-        return FALLO;
-    }
+
+    /*En cada funcion posterior se escribirá por terminal 
+    de donde proviene*/
+    if (size != BLOCKSIZE) return FALLO;
+    
     return size;
 }

@@ -38,7 +38,10 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
     SB.totBloques              = nbloques;
     SB.totInodos               = ninodos;
     
-    if(bwrite(posSB, &SB) == FALLO) return FALLO;
+    if(bwrite(posSB, &SB) == FALLO) {
+        fprintf(stderr, RED"Error: escritura superbloque en initSB\n"RESET);
+        return FALLO;
+    }
     
     return EXITO;
 }
@@ -46,7 +49,11 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
 int initMB(){
     //Lectura del superbloque
     struct superbloque SB;
-    if(bread(posSB, &SB) == FALLO) return FALLO;
+    if(bread(posSB, &SB) == FALLO){
+        fprintf(stderr, RED
+            "Error: lectura SB en inicializacion de MB\n"RESET);
+        return FALLO;
+    }
 
     //Miramos la ocupacion de los metadatos
     unsigned int metaData = tamSB + tamMB(SB.totBloques) + tamAI(SB.totInodos);
@@ -55,14 +62,22 @@ int initMB(){
     unsigned int usedBlock = metaData / 8 / BLOCKSIZE;
 
     //contenedor de un bloque del mapa de bytes
-    char bufferMB[BLOCKSIZE];
+    unsigned char bufferMB[BLOCKSIZE];
 
     //Bucle para escribir los bloques ocupados por metadatos
     for(int i = 0; i < usedBlock; i++){
+        memset(bufferMB, 255, BLOCKSIZE);
         //Se escribe en el disco
-        if(bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO) return FALLO;
+        if(bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO){
+            fprintf(stderr, RED
+                "Error: escritura en inicializacion del MB 1\n"RESET);
+            return FALLO;
+        }
         SB.cantBloquesLibres--;
     }
+
+    //limpiar el buffer para post relleno.
+    memset(bufferMB, '\0', BLOCKSIZE);
 
     //Verificar las sobras que no ocupan 1 byte
     int sobra = metaData % 8;
@@ -88,10 +103,20 @@ int initMB(){
     SB.cantBloquesLibres -= metaData-1;
 
     //Escribiendo en el disco
-    if(bwrite(SB.posPrimerBloqueMB + usedBlock, bufferMB) == FALLO) return FALLO;
+    if(bwrite(SB.posPrimerBloqueMB + usedBlock, bufferMB) == FALLO){
+        fprintf(stderr, RED
+            "Error: escritura MB en inicializacion del MB 2\n"RESET);
+        return FALLO;
+    }
+
     SB.cantBloquesLibres--;
 
-    if(bwrite(posSB, &SB) == FALLO) return FALLO;
+    //Escritura del superbloque modificado
+    if(bwrite(posSB, &SB) == FALLO){
+        fprintf(stderr, RED
+            "Error: escritura SB en inicializacion del MB 2\n"RESET);
+        return FALLO;
+    }
 
     return EXITO;
 }
@@ -101,7 +126,11 @@ int initAI(){
 
     //Lectura del superbloque
     struct superbloque SB;
-    if(bread(posSB, &SB) == FALLO) return FALLO;
+    if(bread(posSB, &SB) == FALLO){
+        fprintf(stderr, RED
+            "Error: lectura SB en inicializacion de AI\n"RESET);
+        return FALLO;
+    }
     
 
     //si hemos inicializado SB.posPrimerInodoLibre = 0 entonces
@@ -110,7 +139,11 @@ int initAI(){
     //para cada bloque del AI
     for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++){
 
-        if (bread(i,inodos) == -1) return FALLO;
+        if (bread(i,inodos) == -1) {
+            fprintf(stderr, RED
+                "Error: lectura AI en inicializacion de AI\n"RESET);
+            return FALLO;
+        }
 
         //para cada inodo del bloque
         for (int j = 0; j < BLOCKSIZE/INODOSIZE; j++){ 
@@ -132,7 +165,12 @@ int initAI(){
                 break;
             }
         }
-        if (bwrite(i,inodos) == -1) return FALLO;
+
+        if (bwrite(i,inodos) == -1){
+            fprintf(stderr, RED
+                "Error: escritura AI en inicializacion de AI\n"RESET);
+            return FALLO;
+        }
     }
 
     return EXITO;
