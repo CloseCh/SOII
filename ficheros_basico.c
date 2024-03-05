@@ -142,7 +142,8 @@ int initAI(){
 /*****************************************************************************************/
 
 int escribir_bit(unsigned int nbloque, unsigned int bit){
-    
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
     //Calculamos posiciones de memoria
     int posbyte= nbloque/8;
     int posbit= nbloque%8;
@@ -171,8 +172,12 @@ int escribir_bit(unsigned int nbloque, unsigned int bit){
 }
 
 char leer_bit(unsigned int nbloque){
+
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
     int posbyte= nbloque/8;
     int posbit= nbloque%8;
+    int nbloqueMB=posbyte/BLOCKSIZE;
     int nbloqueabs=SB.posPrimerBloqueMB+ nbloqueMB;
     unsigned char bufferMB[BLOCKSIZE];
     unsigned char mascara = 128;
@@ -184,7 +189,9 @@ char leer_bit(unsigned int nbloque){
 }
 
 int reservar_bloque(){
-
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+    int nbloqueMB=posbyte/BLOCKSIZE;
     //Miramos primero si hay bloques libres
     if(SB.cantBloquesLibres>0){
         unsigned char bufferMB[BLOCKSIZE];
@@ -218,7 +225,8 @@ int reservar_bloque(){
 }
 
 int liberar_bloque(unsigned int nbloque){
-
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
     escribir_bit(nbloque,0);
     //Incrementamos cantidad de bloques libres
     SB.cantBloquesLibres++; //Falta salvar el superbloque
