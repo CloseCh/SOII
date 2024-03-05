@@ -8,7 +8,8 @@ int main(int argc, char **argv){
     bmount(argv[1]);
 
     //inicializar a 0s el fichero usado como dispositivo virtual
-    int nbloques = atoi(argv[2]);
+    
+    unsigned int nbloques = atoi(argv[2]);
 
     unsigned char buf[BLOCKSIZE];
 

@@ -44,52 +44,50 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
 }
 
 int initMB(){
-    int sizeMB = BLOCKSIZE/8;
-    char bufferMB[sizeMB];
-
     //Lectura del superbloque
     struct superbloque SB;
     if(bread(posSB, &SB) == FALLO) return FALLO;
 
-    //Creamos una variable que contenga el tamaño de los metadatos
-    int tamt = tamSB + SB.totBloques + SB.totInodos;
-    int sobra = tamt % 8;
+    //Miramos la ocupacion de los metadatos
+    unsigned int metaData = tamSB + tamMB(SB.totBloques) + tamAI(SB.totInodos);
+
+    //Con esto miramos si se debe escribir en un solo bloque o más
+    unsigned int usedBlock = metaData / 8 / BLOCKSIZE;
+
+    //contenedor de un bloque del mapa de bytes
+    char bufferMB[BLOCKSIZE];
+
+    //Bucle para escribir los bloques ocupados por metadatos
+    for(int i = 0; i < usedBlock; i++){
+        //Se escribe en el disco
+        if(bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO) return FALLO;
+    }
+
+    //Verificar las sobras que no ocupan 1 byte
+    int sobra = metaData % 8;
 
     //cantidad de bytes a 1
-    tamt /= 8;
+    metaData /= 8;
 
-    for (int i = 0; i < tamt; i++){
+    for (int i = 0; i < metaData; i++){
         //Ponemos 1111111 en cada bloque
         bufferMB[i] = 255;
     }
-
-    
-    //Hay casos en los que puede que no sobre encontes lo contemplamos.
-    if (sobra != 0){
-        char cont = 0;
-        //Los 1s restantes se colocaran en la siguiente posicion
-        //Si tamt%8=3 --> en tamt/8+1 2^7+2^6+2^5
-        while(sobra>0){
-            cont+=2^(8-sobra);
-            sobra--;
-        }
         
-        bufferMB[tamt + 1] = cont;
-        //Rellenamos el resto con 0s
-        for (int i = tamt + 2; i < sizeMB; i++){
-            bufferMB[i] = 0;
-        }
-    } else {
-        for (int i = tamt + 1; i < sizeMB; i++){
-            bufferMB[i] = 0;
-        }
+    //Los 1s restantes se colocaran en la siguiente posicion
+    char cont = 0;
+    unsigned char mascara = 128;    // 10000000
+    while(sobra>0){
+        bufferMB[metaData] |= mascara;
+        mascara >>= 1;
+        sobra--;
     }
 
     //Cambiar el dato del SB.
-    SB.cantBloquesLibres -= tamt-1;
-    
+    SB.cantBloquesLibres -= metaData-1;
+
     //Escribiendo en el disco
-    if(bwrite(SB.posPrimerBloqueMB, bufferMB) == FALLO) return FALLO;
+    if(bwrite(SB.posPrimerBloqueMB + usedBlock, bufferMB) == FALLO) return FALLO;
 
     return EXITO;
 }
