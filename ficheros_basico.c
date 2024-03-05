@@ -61,6 +61,7 @@ int initMB(){
     for(int i = 0; i < usedBlock; i++){
         //Se escribe en el disco
         if(bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO) return FALLO;
+        SB.cantBloquesLibres--;
     }
 
     //Verificar las sobras que no ocupan 1 byte
@@ -88,6 +89,9 @@ int initMB(){
 
     //Escribiendo en el disco
     if(bwrite(SB.posPrimerBloqueMB + usedBlock, bufferMB) == FALLO) return FALLO;
+    SB.cantBloquesLibres--;
+
+    if(bwrite(posSB, &SB) == FALLO) return FALLO;
 
     return EXITO;
 }
