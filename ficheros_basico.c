@@ -178,31 +178,176 @@ int initAI(){
 /*****************************************************************************************/
 /*                                       NIVEL 3                                         */
 /*****************************************************************************************/
+int escribir_bit(unsigned int nbloque, unsigned int bit){
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+    //Calculamos posiciones de memoria
+    int posbyte= nbloque/8;
+    int posbit= nbloque%8;
+    int nbloqueMB=posbyte/BLOCKSIZE;
+    int nbloqueabs=SB.posPrimerBloqueMB+ nbloqueMB;
+    unsigned char bufferMB[BLOCKSIZE];
+    //Leemos el nbloque y lo cargamos en bufferMB
+    if (bread(nbloque,bufferMB) == -1) return FALLO;
+    posbyte=posbyte%BLOCKSIZE;
+    unsigned char mascara=128;
+    //Desplazamos posbits el bit de la máscara
+    mascara >>=posbit;
 
-//int escribir_bit(unsigned int nbloque, unsigned int bit){
-//
-//}
-//
-//char leer_bit(unsigned int nbloque){
-//
-//}
-//
-//int reservar_bloque(){
-//
-//}
-//
-//int liberar_bloque(unsigned int nbloque){
-//
-//}
-//
-//int escribir_inodo(unsigned int ninodo, struct inodo *inodo){
-//
-//}
-//
-//int leer_inodo(unsigned int ninodo, struct inodo *inodo){
-//
-//}
-//
-//int reservar_inodo(unsigned char tipo, unsigned char permisos){
-//    
-//}
+    if(bit==1){
+        bufferMB[posbyte]|=mascara;
+
+    }else if(bit==0){
+        bufferMB[posbyte]&= ~mascara;
+    }else{
+        return FALLO;
+    }
+    //Escribimos el buffer en el dispositivo virtual
+    if (bwrite(nbloqueabs,bufferMB[posbyte]) == -1) return FALLO;
+    return EXITO;
+
+}
+
+char leer_bit(unsigned int nbloque){
+
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+    int posbyte= nbloque/8;
+    int posbit= nbloque%8;
+    int nbloqueMB=posbyte/BLOCKSIZE;
+    int nbloqueabs=SB.posPrimerBloqueMB+ nbloqueMB;
+    unsigned char bufferMB[BLOCKSIZE];
+    unsigned char mascara = 128;
+    mascara >>=posbit;
+    mascara &= bufferMB[posbyte];
+    mascara >>=(7-posbit);
+    return mascara;
+
+}
+
+int reservar_bloque(){
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+    int nbloqueMB=posbyte/BLOCKSIZE;
+    //Miramos primero si hay bloques libres
+    if(SB.cantBloquesLibres>0){
+        unsigned char bufferMB[BLOCKSIZE];
+        unsigned char bufferAux[BLOCKSIZE];
+        memset(bufferAux,255,BLOCKSIZE);
+        bread(nbloqueMB + SB.posPrimerBloqueMB,bufferMB);
+        //Iteracion para encontrar primer bloque con un 0
+        //memcmp(bufferMB,bufferAux,BLOCKSIZE);
+
+        //Iteracion para encontrar el byte del bloque con 0
+        int posbyte;
+        //Iteracion para encontrar bit a 0
+        unsigned char mascara=128;
+        int posbit=0;
+        while(bufferMB[posbyte] & mascara){
+            bufferMB[posbyte]<<=1;
+            posbit++;
+        }
+        int nbloque=(nbloqueMB*BLOCKSIZE+posbyte)*8+posbit;
+        escribir_bit(nbloque,1);
+        //Decrementamos la cantidad de bloques libres
+        SB.cantBloquesLibres--;
+        //Grabamos un buffer de 0s en la posicion nbloques del disp
+        memset(bufferAux,0,BLOCKSIZE);
+        //Falta grabar el buffer
+
+        return nbloque;
+    }
+    return FALLO;
+
+}
+
+int liberar_bloque(unsigned int nbloque){
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+    escribir_bit(nbloque,0);
+    //Incrementamos cantidad de bloques libres
+    SB.cantBloquesLibres++; //Falta salvar el superbloque
+    return nbloque;
+
+}
+
+int escribir_inodo(unsigned int ninodo, struct inodo *inodo){
+    struct inodo inodos [BLOCKSIZE/INODOSIZE];
+
+    //Lectura del superbloque
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+
+    //Obtener posición absoluta del dispositivo
+    int nbloqueAI=(ninodo*INODOSIZE)/BLOCKSIZE;
+    int nbloqueabs=nbloqueAI+SB.posPrimerBloqueAI;
+
+    //Lectura bloque en memoria
+    bread(nbloqueabs,inodos);
+
+    //Escribir contenido del inodo en el lugar correspondiente del array
+    int posinodo=ninodo%(BLOCKSIZE/INODOSIZE);
+    inodos[posinodo]=*inodo;
+
+    // escribir bloque modificado en el dispositivo virtual
+    bwrite(nbloqueabs,inodos);
+
+    return EXITO;
+}
+
+int leer_inodo(unsigned int ninodo, struct inodo *inodo){
+    struct inodo inodos [BLOCKSIZE/INODOSIZE];
+
+    //Lectura del superbloque
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+
+    //Obtener posición absoluta del dispositivo
+    int nbloqueAI=(ninodo*INODOSIZE)/BLOCKSIZE;
+    int nbloqueabs=nbloqueAI+SB.posPrimerBloqueAI;
+
+    //Lectura bloque en memoria
+    bread(nbloqueabs,inodos);
+
+    return EXITO;
+}
+
+int reservar_inodo(unsigned char tipo, unsigned char permisos){
+    //Lectura del superbloque
+    struct superbloque SB;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+
+    //Comprobar si hay inodos libres
+    if(SB.cantInodosLibres < 1) return FALLO;
+
+    //Actualizar lista enlazada de inodos libres
+    int posInodoReservado=SB.posPrimerInodoLibre; // unsigned int o simplemente int?
+    struct inodo inodoAux;
+    leer_inodo(posInodoReservado,&inodoAux);
+    SB.posPrimerInodoLibre=inodoAux.punterosDirectos[0];
+
+    //Inicializar todos los campos del inodo al que apuntaba inicialmente el superbloque
+    struct inodo nuevoInodo;
+    nuevoInodo.tipo=tipo;
+    nuevoInodo.permisos=permisos;
+    nuevoInodo.nlinks=1;
+    nuevoInodo.tamEnBytesLog=0;
+    nuevoInodo.atime=nuevoInodo.mtime=nuevoInodo.ctime=time(NULL);
+    nuevoInodo.numBloquesOcupados=0;
+
+    for (int i = 0; i < 12; i++) {
+        nuevoInodo.punterosDirectos[i] = 0;
+    }
+
+    for (int i = 0; i < 3; i++) {
+        nuevoInodo.punterosIndirectos[i] = 0;
+    }
+
+    //Escribir el inodo inicializado en la posición del que era el primer inodo libre
+    if (escribir_inodo(posInodoReservado, &nuevoInodo) == FALLO) return FALLO;
+
+    // Decrementar la cantidad de inodos libres y rescribir el superbloque
+    SB.cantInodosLibres--;
+    if(bwrite(posSB,&SB)==FALLO) return FALLO;
+    return posInodoReservado;
+}

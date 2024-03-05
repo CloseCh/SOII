@@ -115,36 +115,37 @@ int initMB();
  */
 int initAI();
 
-/*
+/* >
  * Function: escribir_bit
  * ----------------------------
- *  ---
+ *  escribe el valor indicado por bit en un bit de MB
  *   
- *  unsigned int nbloques: Numero de bloque.
+ *  unsigned int nbloque: Numero de bloque.
+ * 
  *  
- *  unsigned int bit: ---
+ *  unsigned int bit: 0(libre), 1(ocupado)
  *
- *  returns: ---
+ *  returns: -1 si fallo, 0 si todo va bien
  */
 int escribir_bit(unsigned int nbloque, unsigned int bit);
 
 /*
  * Function: leer_bit
  * ----------------------------
- *  ---
+ *  Lee un bit del MB
  *   
  *  unsigned int nbloques: Numero de bloque.
  *
- *  returns: ---
+ *  returns: Valor del bit leido
  */
 char leer_bit(unsigned int nbloque);
 
 /*
  * Function: reservar_bloque
  * ----------------------------
- *  ---
+ *  Encuentra el primer bloque de MB libre y lo marca
  *
- *  returns: ---
+ *  returns: posicion del bloque, -1 si no encuentra o falla
  */
 int reservar_bloque();
 
@@ -162,11 +163,13 @@ int liberar_bloque(unsigned int nbloque);
 /*
  * Function: escribir_inodo
  * ----------------------------
- *  ---
+ *  Escribe el contenido de una variable de tipo struct inodo, 
+ *  pasada por referencia, en un determinado inodo del array de inodos,
+ *  inodos.
  *   
  *  unsigned int ninodo: Numero de ninodo.
  *  
- *  unsigned inodo *inodo: ---
+ *  unsigned inodo *inodo: inodo a escribir.
  * 
  *  returns: ---
  */
@@ -175,7 +178,8 @@ int escribir_inodo(unsigned int ninodo, struct inodo *inodo);
 /*
  * Function: leer_inodo
  * ----------------------------
- *  ---
+ *  Lee un determinado inodo del array de inodos para volcarlo 
+ *  en una variable de tipo struct inodo pasada por referencia.
  *   
  *  unsigned int ninodo: Numero de ninodo.
  *  
@@ -188,12 +192,14 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo);
 /*
  * Function: reservar_inodo
  * ----------------------------
- *  ---
+ *  Encuentra el primer inodo libre (dato almacenado en el superbloque),
+ *  lo reserva (con la ayuda de la función escribir_inodo()), 
+ *  devuelve su número y actualiza la lista enlazada de inodos libres.
  *   
- *  unsigned char tipo: Numero de ninodo.
+ *  unsigned char tipo: 'l':libre, 'd':directorio o 'f':fichero
  *  
- *  unsigned char permisos: ---
+ *  unsigned char permisos: lectura y/o escritura y/o ejecución
  * 
- *  returns: ---
+ *  returns: la posición del inodo reservado.
  */
 int reservar_inodo(unsigned char tipo, unsigned char permisos);
