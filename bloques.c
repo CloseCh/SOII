@@ -1,6 +1,6 @@
 #include "bloques.h"
 
-static int descriptor = 0;
+static unsigned int descriptor = 0;
 
 
 int bmount(const char *camino){
@@ -22,13 +22,13 @@ int bumount(){
 
 int bwrite(unsigned int nbloque, const void *buf){
     //calculamos desplazamiento
-    int desplazamiento = nbloque * BLOCKSIZE;
+    unsigned int desplazamiento = nbloque * BLOCKSIZE;
 
     //movemos el puntero del fichero en el offset correcto
     lseek(descriptor, desplazamiento, SEEK_SET);
 
     //volcamos el contenido del buffer en la posicion del dv
-    int size = write(descriptor, buf, BLOCKSIZE);
+    unsigned int size = write(descriptor, buf, BLOCKSIZE);
 
     /*En cada funcion posterior se escribirá por terminal 
     de donde proviene*/
@@ -39,12 +39,12 @@ int bwrite(unsigned int nbloque, const void *buf){
 
 int bread(unsigned int nbloque, void *buf){
     //calculamos desplazamiento
-    int desplazamiento = nbloque * BLOCKSIZE;
+    unsigned int desplazamiento = nbloque * BLOCKSIZE;
 
     // movemos el puntero del fichero en el offset correcto
     lseek(descriptor, desplazamiento, SEEK_SET);
 
-    int size = read(descriptor, buf, BLOCKSIZE);
+    unsigned int size = read(descriptor, buf, BLOCKSIZE);
 
     /*En cada funcion posterior se escribirá por terminal 
     de donde proviene*/
