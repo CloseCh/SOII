@@ -228,18 +228,33 @@ char leer_bit(unsigned int nbloque){
 int reservar_bloque(){
     struct superbloque SB;
     if(bread(posSB, &SB) == FALLO) return FALLO;
-    int nbloqueMB=posbyte/BLOCKSIZE;
+    int nbloqueMB=0;
     //Miramos primero si hay bloques libres
     if(SB.cantBloquesLibres>0){
         unsigned char bufferMB[BLOCKSIZE];
         unsigned char bufferAux[BLOCKSIZE];
         memset(bufferAux,255,BLOCKSIZE);
         bread(nbloqueMB + SB.posPrimerBloqueMB,bufferMB);
-        //Iteracion para encontrar primer bloque con un 0
-        //memcmp(bufferMB,bufferAux,BLOCKSIZE);
-
+        int find=0;
+        find=memcmp(bufferMB,bufferAux,nbloqueMB);
+        // Cuando encontremos el espacio se pondrá a 1 y saldra del while
+        //Comparamos cada bloque de MB con 1s, hasta que sea menor (haya algun 0)
+        while(!find && nbloqueMB<BLOCKSIZE){
+            nbloqueMB++;
+            bread(nbloqueMB + SB.posPrimerBloqueMB,bufferMB);
+            find=memcmp(bufferMB,bufferAux,nbloqueMB);
+        }
+        if(nbloqueMB>=BLOCKSIZE)return FALLO;
+        
+        find=0;
+        int posbyte =0;
         //Iteracion para encontrar el byte del bloque con 0
-        int posbyte;
+        while(posbyte<BLOCKSIZE && !find){
+            if(bufferMB[posbyte]<255)find=1;
+            posbyte++;
+        }
+        
+        
         //Iteracion para encontrar bit a 0
         unsigned char mascara=128;
         int posbit=0;
