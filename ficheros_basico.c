@@ -137,7 +137,7 @@ int initAI(){
     //para cada bloque del AI
     for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++){
 
-        if (bread(i,inodos) == -1) {
+        if (bread(i,inodos) == FALLO) {
             fprintf(stderr, RED
                 "Error: lectura AI en inicializacion de AI\n"RESET);
             return FALLO;
@@ -164,7 +164,7 @@ int initAI(){
             }
         }
 
-        if (bwrite(i,inodos) == -1){
+        if (bwrite(i,inodos) == FALLO){
             fprintf(stderr, RED
                 "Error: escritura AI en inicializacion de AI\n"RESET);
             return FALLO;
@@ -179,111 +179,194 @@ int initAI(){
 /*                                       NIVEL 3                                         */
 /*****************************************************************************************/
 int escribir_bit(unsigned int nbloque, unsigned int bit){
+
     struct superbloque SB;
-    if(bread(posSB, &SB) == FALLO) return FALLO;
-    //Calculamos posiciones de memoria
-    int posbyte= nbloque/8;
-    int posbit= nbloque%8;
-    int nbloqueMB=posbyte/BLOCKSIZE;
-    int nbloqueabs=SB.posPrimerBloqueMB+ nbloqueMB;
-    unsigned char bufferMB[BLOCKSIZE];
-    //Leemos el nbloque y lo cargamos en bufferMB
-    if (bread(nbloque,bufferMB) == -1) return FALLO;
-    posbyte=posbyte%BLOCKSIZE;
-    unsigned char mascara=128;
-    //Desplazamos posbits el bit de la máscara
-    mascara >>=posbit;
-
-    if(bit==1){
-        bufferMB[posbyte]|=mascara;
-
-    }else if(bit==0){
-        bufferMB[posbyte]&= ~mascara;
-    }else{
+    if(bread(posSB, &SB) == FALLO) {
+        fprintf(stderr, RED
+            "Error: lectura SB en escribir bit\n"RESET);
         return FALLO;
     }
-    //Escribimos el buffer en el dispositivo virtual
-    if (bwrite(nbloqueabs,bufferMB[posbyte]) == -1) return FALLO;
-    return EXITO;
 
+    //Calculamos posiciones de memoria en MB
+    unsigned int posbyte = nbloque/8;
+    unsigned int posbit = nbloque%8;
+
+    //Ver en que bloque del MB se debe escribir
+    unsigned int nbloqueMB = posbyte/BLOCKSIZE;
+    unsigned int nbloqueabs = SB.posPrimerBloqueMB+nbloqueMB;
+
+    //Leemos el nbloque y lo cargamos en bufferMB
+    unsigned char bufferMB[BLOCKSIZE];
+    if (bread(nbloque,bufferMB) == -1) {
+        fprintf(stderr, RED
+            "Error: lectura MB en escribir bit\n"RESET);
+        return FALLO;
+    }
+
+    posbyte = posbyte%BLOCKSIZE; //Ver en que byte del bloque es
+    unsigned char mascara = 128; //10000000
+    mascara >>= posbit; //Desplazamos posbits el bit de la máscara
+    if (bit == 1) {
+        bufferMB[posbyte]|=mascara;
+    } else if (bit == 0) {
+        bufferMB[posbyte]&= ~mascara;
+    } else {
+        return FALLO;
+    }
+
+    //Escribimos el buffer en el dispositivo virtual
+    if (bwrite(nbloqueabs, bufferMB[posbyte]) == FALLO) {
+        fprintf(stderr, RED
+            "Error: escritura MB en escribir bit\n"RESET);
+        return FALLO;
+    }
+
+    return EXITO;
 }
 
 char leer_bit(unsigned int nbloque){
-
     struct superbloque SB;
-    if(bread(posSB, &SB) == FALLO) return FALLO;
-    int posbyte= nbloque/8;
-    int posbit= nbloque%8;
-    int nbloqueMB=posbyte/BLOCKSIZE;
-    int nbloqueabs=SB.posPrimerBloqueMB+ nbloqueMB;
-    unsigned char bufferMB[BLOCKSIZE];
-    unsigned char mascara = 128;
-    mascara >>=posbit;
-    mascara &= bufferMB[posbyte];
-    mascara >>=(7-posbit);
-    return mascara;
+    if (bread(posSB, &SB) == FALLO) {
+        fprintf(stderr, RED
+            "Error: lectura SB en leer bit\n"RESET);
+        return FALLO;
+    }
 
+    //Calculamos posiciones de memoria en MB
+    unsigned int posbyte = nbloque/8;
+    unsigned int posbit = nbloque%8;
+
+    //Ver en que bloque del MB se debe escribir
+    unsigned int nbloqueMB = posbyte/BLOCKSIZE;
+    unsigned int nbloqueabs = SB.posPrimerBloqueMB+nbloqueMB;
+
+    //Leemos el nbloque y lo cargamos en bufferMB
+    unsigned char bufferMB[BLOCKSIZE];
+    if (bread(nbloque,bufferMB) == -1) {
+        fprintf(stderr, RED
+            "Error: lectura MB en leer bit\n"RESET);
+        return FALLO;
+    }
+
+    unsigned char mascara = 128; // 10000000
+    mascara >>= posbit; // desplazamiento de bits a la derecha, los que indique posbit
+    mascara &= bufferMB[posbyte]; // operador AND para bits
+    mascara >>= (7-posbit); // desplazamiento de bits a la derecha
+
+    return mascara;
 }
 
 int reservar_bloque(){
+    //Lectura SB
     struct superbloque SB;
-    if(bread(posSB, &SB) == FALLO) return FALLO;
-    int nbloqueMB=0;
-    //Miramos primero si hay bloques libres
-    if(SB.cantBloquesLibres>0){
-        unsigned char bufferMB[BLOCKSIZE];
-        unsigned char bufferAux[BLOCKSIZE];
-        memset(bufferAux,255,BLOCKSIZE);
-        bread(nbloqueMB + SB.posPrimerBloqueMB,bufferMB);
-        int find=0;
-        find=memcmp(bufferMB,bufferAux,nbloqueMB);
-        // Cuando encontremos el espacio se pondrá a 1 y saldra del while
-        //Comparamos cada bloque de MB con 1s, hasta que sea menor (haya algun 0)
-        while(!find && nbloqueMB<BLOCKSIZE){
-            nbloqueMB++;
-            bread(nbloqueMB + SB.posPrimerBloqueMB,bufferMB);
-            find=memcmp(bufferMB,bufferAux,nbloqueMB);
-        }
-        if(nbloqueMB>=BLOCKSIZE)return FALLO;
-        
-        find=0;
-        int posbyte =0;
-        //Iteracion para encontrar el byte del bloque con 0
-        while(posbyte<BLOCKSIZE && !find){
-            if(bufferMB[posbyte]<255)find=1;
-            posbyte++;
-        }
-        
-        
-        //Iteracion para encontrar bit a 0
-        unsigned char mascara=128;
-        int posbit=0;
-        while(bufferMB[posbyte] & mascara){
-            bufferMB[posbyte]<<=1;
-            posbit++;
-        }
-        int nbloque=(nbloqueMB*BLOCKSIZE+posbyte)*8+posbit;
-        escribir_bit(nbloque,1);
-        //Decrementamos la cantidad de bloques libres
-        SB.cantBloquesLibres--;
-        //Grabamos un buffer de 0s en la posicion nbloques del disp
-        memset(bufferAux,0,BLOCKSIZE);
-        //Falta grabar el buffer
-
-        return nbloque;
+    if (bread(posSB, &SB) == FALLO) {
+        fprintf(stderr, RED
+            "Error: lectura SB en reservar bloque\n"RESET);
+        return FALLO;
     }
-    return FALLO;
 
+    // Ver si quedan bloques libres
+    if(SB.cantBloquesLibres > 0){
+        fprintf(stderr, RED
+            "Error: No quedan bloques libres\n"RESET);
+        return FALLO;
+    }
+
+    //Localizar el primer bloque libre
+    unsigned char bufferMB[BLOCKSIZE];
+    unsigned char bufferAux[BLOCKSIZE]; //Usado en la comparación de bloques
+    memset(bufferAux, 255, BLOCKSIZE);
+    unsigned int nbloqueMB = 0;
+    for (;;){
+        if (bread(SB.posPrimerBloqueMB+nbloqueMB, bufferMB) == FALLO){
+            fprintf(stderr, RED
+                "Error: lectura MB en reservar bloque\n"RESET);
+            return FALLO;
+        }
+
+        //Salir del bucle si se localiza
+        if (memcmp(bufferMB, bufferAux, BLOCKSIZE) < 0)break;
+
+        //Control de errores, salir si supera el maximo de bloques del MB
+        if (SB.posPrimerBloqueMB+nbloqueMB > SB.posUltimoBloqueMB) {
+            fprintf(stderr, RED
+                "Error: superado maximo de bloques MB en reservar bloque\n"RESET);
+            return FALLO;
+        }
+
+        nbloqueMB++;
+    }
+
+    //Iteracion para encontrar el byte del bloque menor a 255
+    unsigned int posbyte = 0;
+    while(posbyte < BLOCKSIZE){
+        if(bufferMB[posbyte]<255) break;
+        posbyte++;
+    }
+    //Control de errores, FALLO si se sale del rango de un bloque
+    if (posbyte > BLOCKSIZE) {
+        fprintf(stderr, RED
+            "Error: superado maximo de bytes sobre un bloque en reservar bloque\n"RESET);
+        return FALLO;
+    }
+        
+    //Iteracion para encontrar bit a 0
+    unsigned char mascara=128;
+    unsigned int posbit = 0;
+    while(bufferMB[posbyte] & mascara){
+        bufferMB[posbyte]<<=1;
+        posbit++;
+    }
+
+    //Determinar el numero de bloque físico
+    unsigned int nbloque = (nbloqueMB*BLOCKSIZE+posbyte)*8+posbit;
+
+    escribir_bit(nbloque,1);
+
+    //Decrementamos la cantidad de bloques libres
+    SB.cantBloquesLibres--;
+    //Guardar el cambio de SB
+    if (bwrite(posSB, &SB) == FALLO) {
+        fprintf(stderr, RED
+            "Error: escritura SB en reservar bloque\n"RESET);
+        return FALLO;
+    }
+
+    //Grabamos un buffer de 0s en la posicion nbloques del disp
+    memset(bufferAux,0,BLOCKSIZE);
+    if (bwrite(nbloque, bufferAux) == FALLO) {
+        fprintf(stderr, RED
+            "Error: escritura SB en reservar bloque\n"RESET);
+        return FALLO;
+    }
+
+    return nbloque;
 }
 
 int liberar_bloque(unsigned int nbloque){
     struct superbloque SB;
-    if(bread(posSB, &SB) == FALLO) return FALLO;
-    escribir_bit(nbloque,0);
+    if(bread(posSB, &SB) == FALLO) {
+        fprintf(stderr, RED
+            "Error: lectura SB en liberar bloque\n"RESET);
+        return FALLO;
+    }
+
+    if (escribir_bit(nbloque,0) == FALLO) {
+        fprintf(stderr, RED
+            "Error: error al escribir bit en liberar bloque\n"RESET);
+        return FALLO;
+    }
+
     //Incrementamos cantidad de bloques libres
     SB.cantBloquesLibres++; //Falta salvar el superbloque
-    return nbloque;
+    //Guardar el cambio de SB
+    if (bwrite(posSB, &SB) == FALLO) {
+        fprintf(stderr, RED
+            "Error: escritura SB en reservar bloque\n"RESET);
+        return FALLO;
+    }
 
+    return nbloque;
 }
 
 int escribir_inodo(unsigned int ninodo, struct inodo *inodo){
