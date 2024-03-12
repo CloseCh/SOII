@@ -498,3 +498,17 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos){
 
     return posInodoReservado;
 }
+
+int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr){
+    return FALLO;
+}
+
+
+int obtener_indice(unsigned int nblogico, int nivel_punteros){
+    return FALLO;
+}
+
+
+int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned char reservar){
+    return FALLO;
+}
