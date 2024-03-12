@@ -171,7 +171,7 @@ int liberar_bloque(unsigned int nbloque);
  *  
  *  unsigned inodo *inodo: inodo a escribir.
  * 
- *  returns: ---
+ *  returns: 0 si todo ha ido bien, -1 si falla.
  */
 int escribir_inodo(unsigned int ninodo, struct inodo *inodo);
 
@@ -183,9 +183,9 @@ int escribir_inodo(unsigned int ninodo, struct inodo *inodo);
  *   
  *  unsigned int ninodo: Numero de ninodo.
  *  
- *  unsigned inodo *inodo: ---
+ *  unsigned inodo *inodo: inodo al que see volcara el inodo a leer
  * 
- *  returns: ---
+ *  returns: 0 si todo ha ido bien, -1 si falla.
  */
 int leer_inodo(unsigned int ninodo, struct inodo *inodo);
 
