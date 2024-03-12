@@ -136,7 +136,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit);
  *   
  *  unsigned int nbloques: Numero de bloque.
  *
- *  returns: Valor del bit leido
+ *  returns: Valor del bit leido, -1 si fallo.
  */
 char leer_bit(unsigned int nbloque);
 
@@ -145,18 +145,18 @@ char leer_bit(unsigned int nbloque);
  * ----------------------------
  *  Encuentra el primer bloque de MB libre y lo marca
  *
- *  returns: posicion del bloque, -1 si no encuentra o falla
+ *  returns: posicion del bloque, -1 si no encuentra o falla.
  */
 int reservar_bloque();
 
 /*
  * Function: liberar_bloque
  * ----------------------------
- *  ---
+ *  Libera un bloque determinado escribiendo en el MB.
  *   
  *  unsigned int nbloques: Numero de bloque.
  * 
- *  returns: ---
+ *  returns: numero de bloque liberado, -1 si fallo.
  */
 int liberar_bloque(unsigned int nbloque);
 
@@ -171,7 +171,7 @@ int liberar_bloque(unsigned int nbloque);
  *  
  *  unsigned inodo *inodo: inodo a escribir.
  * 
- *  returns: ---
+ *  returns: 0 si todo ha ido bien, -1 si falla.
  */
 int escribir_inodo(unsigned int ninodo, struct inodo *inodo);
 
@@ -183,9 +183,9 @@ int escribir_inodo(unsigned int ninodo, struct inodo *inodo);
  *   
  *  unsigned int ninodo: Numero de ninodo.
  *  
- *  unsigned inodo *inodo: ---
+ *  unsigned inodo *inodo: inodo al que see volcara el inodo a leer
  * 
- *  returns: ---
+ *  returns: 0 si todo ha ido bien, -1 si falla.
  */
 int leer_inodo(unsigned int ninodo, struct inodo *inodo);
 
@@ -196,7 +196,7 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo);
  *  lo reserva (con la ayuda de la función escribir_inodo()), 
  *  devuelve su número y actualiza la lista enlazada de inodos libres.
  *   
- *  unsigned char tipo: 'l':libre, 'd':directorio o 'f':fichero
+ *  unsigned char tipo: 'l'-libre, 'd'-directorio o 'f'-fichero
  *  
  *  unsigned char permisos: lectura y/o escritura y/o ejecución
  * 
