@@ -500,7 +500,28 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos){
 }
 
 int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr){
-    return FALLO;
+    //Si se sale del rango fallo
+    if(nblogico<0 || nblogico>=INDIRECTOS2){
+        *ptr=0;
+        return FALLO;
+    }
+    //Asigno valor y luego retorno una vez y no todo el rato (lo cambio si no te gusta)
+    //Apunto ptr a la posicion que toque
+    if(nblogico<12){
+        *ptr=inodo->punterosDirectos[nblogico];
+        nblogico=0;
+    }else if(nblogico>=DIRECTOS && nblogico<INDIRECTOS0){
+        *ptr=inodo->punterosDirectos[0];
+        nblogico=1;
+    }else if(nblogico>=INDIRECTOS0 && nblogico<INDIRECTOS1){
+        *ptr=inodo->punterosDirectos[1];
+        nblogico=2;
+    }else if(nblogico>=INDIRECTOS1 && nblogico<INDIRECTOS2){
+        *ptr=inodo->punterosDirectos[2];
+        nblogico=3;
+    };
+    return nblogico;
+    
 }
 
 
@@ -584,4 +605,4 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
     }
 
     return EXITO;
-}
+}   
