@@ -227,13 +227,14 @@ int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *p
 /*
  * Function: obtener_indice
  * ----------------------------
- *  ---
+ *  Consigue el indice del bloque de punteros pasandole por parámetros el número
+ *  del bloque lógico y el nivel de punteros en que se encuentra.
  *  
- *  unsigned int nblogico: ---
+ *  unsigned int nblogico: número de bloque lógico que queremos comprobar 
  * 
- *  int nivel_punteros: ---
+ *  int nivel_punteros: nivel del bloque de punteros (1,2 o 3).
  * 
- *  returns: ---
+ *  returns: indice del bloque de punteros.
  */
 int obtener_indice(unsigned int nblogico, int nivel_punteros);
 
