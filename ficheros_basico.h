@@ -214,13 +214,13 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos);
  * ----------------------------
  *  ---
  *   
- *  struct inodo *inodo: ---
+ *  struct inodo *inodo: structura para posicionar el puntero
  *  
- *  unsigned int nblogico: ---
+ *  unsigned int nblogico: numero de bloque que queremos comprobar
  * 
- *  unsigned int *ptr: ---
+ *  unsigned int *ptr: puntero con la dirección almacenada
  * 
- *  returns: ---
+ *  returns: rango de posicion de dato (0 -> 0-11, 1-> 12-267, 2-> 268-65803, 3-> 65803-16843019)
  */
 int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr);
 
