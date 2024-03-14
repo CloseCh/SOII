@@ -17,14 +17,14 @@ int main(int argc, char **argv){
     case 3:
         pruebaN3();
         break;
+    case 4:
+        pruebaN4();
+        break;
     default:
         printf (RED"Nivel no implementada.\n"RESET);
         break;
     }
     printf ("\n");
-
-    //Leer inodo
-    printf ("DATOS DEL DIRECTORIO RAIZ \n");
 
     //desmontar el dispositivo virtual
     bumount();

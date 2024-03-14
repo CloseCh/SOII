@@ -212,7 +212,9 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos);
 /*
  * Function: obtener_nRangoBL
  * ----------------------------
- *  ---
+ *  Para obtener el rango de punteros en el que se sitúa el bloque lógico que buscamos
+ *  (0:D, 1:I0, 2:I1, 3:I2), y obtenemos además la dirección almacenada en el puntero 
+ *  correspondiente del inodo.
  *   
  *  struct inodo *inodo: structura para posicionar el puntero
  *  
@@ -241,14 +243,17 @@ int obtener_indice(unsigned int nblogico, int nivel_punteros);
 /*
  * Function: traducir_bloque_inodo
  * ----------------------------
- *  ---
+ *  Esta función se encarga de obtener el nº de bloque físico correspondiente a un 
+ *  bloque lógico determinado del inodo indicado. Enmascara la gestión de los diferentes 
+ *  rangos de punteros directos e indirectos del inodo, de manera que funciones externas no 
+ *  tienen que preocuparse de cómo acceder a los bloques físicos apuntados desde el inodo.
  *  
- *  struct inodo *inodo: ---
+ *  struct inodo *inodo: inodo que contiene el fichero o directorio.
  * 
- *  unsigned int nblogico: ---
+ *  unsigned int nblogico: el bloque logico reservado
  * 
- *  unsigned char reservar: ---
+ *  unsigned char reservar: 0 para consulta, 1 para reservar.
  * 
- *  returns: ---
+ *  returns: el bloque logico reservado, -1 si error.
  */
 int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned char reservar);

@@ -500,27 +500,27 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos){
 }
 
 int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr){
-    //Si se sale del rango fallo
-    if(nblogico<0 || nblogico>=INDIRECTOS2){
-        *ptr=0;
-        return FALLO;
-    }
     //Asigno valor y luego retorno una vez y no todo el rato (lo cambio si no te gusta)
     //Apunto ptr a la posicion que toque
-    if(nblogico<12){
-        *ptr=inodo->punterosDirectos[nblogico];
-        nblogico=0;
-    }else if(nblogico>=DIRECTOS && nblogico<INDIRECTOS0){
-        *ptr=inodo->punterosDirectos[0];
-        nblogico=1;
-    }else if(nblogico>=INDIRECTOS0 && nblogico<INDIRECTOS1){
-        *ptr=inodo->punterosDirectos[1];
-        nblogico=2;
-    }else if(nblogico>=INDIRECTOS1 && nblogico<INDIRECTOS2){
-        *ptr=inodo->punterosDirectos[2];
-        nblogico=3;
-    };
-    return nblogico;
+    if(nblogico<DIRECTOS){
+        *ptr = inodo->punterosDirectos[nblogico];
+        return 0;
+    }else if(nblogico<INDIRECTOS0){
+        *ptr = inodo->punterosIndirectos[0];
+        return 1;
+    }else if(nblogico<INDIRECTOS1){
+        *ptr = inodo->punterosIndirectos[1];
+        return 2;
+    }else if(nblogico<INDIRECTOS2){
+        *ptr = inodo->punterosIndirectos[2];
+        return 3;
+    }else{
+        *ptr = 0;
+        fprintf(stderr, RED
+            "Error: Bloque lógico fuera de rango\n"RESET);
+        return FALLO;
+    }
+    
     
 }
 
@@ -574,9 +574,15 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
                 //el bloque cuelga directamente del inodo
                 if(nivel_punteros == nRangoBL){
                     inodo->punterosIndirectos[nRangoBL-1] = ptr;
+                    fprintf(stderr, GRAY
+                        "[traducir_bloque_inodo()→ inodo.punterosIndirectos[%d] = %d (reservado BF %d para punteros_nivel%d)]\n"RESET,
+                        nRangoBL-1, ptr, ptr, nivel_punteros);
                 //el bloque cuelga de otro bloque de punteros
                 }else{ 
                     buffer[indice] = ptr;
+                    fprintf(stderr, GRAY
+                        "[traducir_bloque_inodo()→ punteros_nivel%d [%d] = %d (reservado BF %d para punteros_nivel%d)]\n"RESET,
+                        nivel_punteros, indice, ptr, ptr, nivel_punteros);
                     //salvamos en el dispositivo el buffer de punteros modificado
                     if(bwrite(ptr_ant, buffer) == FALLO){
                         fprintf(stderr, RED"Error: escritura1 de indice en traducir bloque inodo\n"RESET);
@@ -611,9 +617,15 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
             if(nRangoBL == 0){
                 //asignamos la direción del bl. de datos en el inodo
                 inodo->punterosDirectos[nblogico] = ptr;
+                fprintf(stderr, GRAY
+                    "[traducir_bloque_inodo()→ inodo.punterosDirectos[%d] = %d (reservado BF %d para BL %d)]\n\n"RESET,
+                    nblogico, ptr, ptr, nblogico);
             }else{
                 //asignamos la dirección del bloque de datos en el buffer
                 buffer[indice] = ptr;
+                fprintf(stderr, GRAY
+                    "[traducir_bloque_inodo()→ punteros_nivel%d [%d] = %d (reservado BF %d para BL %d)]\n\n"RESET,
+                    nivel_punteros, indice, ptr, ptr, nblogico);
                  //salvamos en el dispositivo el buffer de punteros modificado
                 if(bwrite(ptr_ant, buffer) == FALLO){
                     fprintf(stderr, RED"Error: escritura2 de indice en traducir bloque inodo\n"RESET);
@@ -623,5 +635,5 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
         }
     }
 
-    return EXITO;
+    return ptr;
 }   
