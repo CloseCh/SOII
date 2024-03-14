@@ -1,4 +1,4 @@
-#include "ficheros_basico.h"
+#include "ficheros.h"
 
 //Pruebas de cada nivel
 

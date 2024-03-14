@@ -179,7 +179,6 @@ int initAI(){
 /*                                       NIVEL 3                                         */
 /*****************************************************************************************/
 int escribir_bit(unsigned int nbloque, unsigned int bit){
-
     struct superbloque SB;
     if(bread(posSB, &SB) == FALLO) {
         fprintf(stderr, RED
@@ -358,8 +357,6 @@ int liberar_bloque(unsigned int nbloque){
     }
 
     if (escribir_bit(nbloque,0) == FALLO) {
-        fprintf(stderr, RED
-            "Error: error al escribir bit en liberar bloque\n"RESET);
         return FALLO;
     }
 
@@ -574,15 +571,19 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
                 //el bloque cuelga directamente del inodo
                 if(nivel_punteros == nRangoBL){
                     inodo->punterosIndirectos[nRangoBL-1] = ptr;
-                    fprintf(stderr, GRAY
-                        "[traducir_bloque_inodo()→ inodo.punterosIndirectos[%d] = %d (reservado BF %d para punteros_nivel%d)]\n"RESET,
-                        nRangoBL-1, ptr, ptr, nivel_punteros);
+                    #if DEBUGN4
+                        fprintf(stderr, GRAY
+                            "[traducir_bloque_inodo()→ inodo.punterosIndirectos[%d] = %d (reservado BF %d para punteros_nivel%d)]\n"RESET,
+                            nRangoBL-1, ptr, ptr, nivel_punteros);
+                    #endif
                 //el bloque cuelga de otro bloque de punteros
                 }else{ 
                     buffer[indice] = ptr;
-                    fprintf(stderr, GRAY
-                        "[traducir_bloque_inodo()→ punteros_nivel%d [%d] = %d (reservado BF %d para punteros_nivel%d)]\n"RESET,
-                        nivel_punteros, indice, ptr, ptr, nivel_punteros);
+                    #if DEBUGN4
+                        fprintf(stderr, GRAY
+                            "[traducir_bloque_inodo()→ punteros_nivel%d [%d] = %d (reservado BF %d para punteros_nivel%d)]\n"RESET,
+                            nivel_punteros, indice, ptr, ptr, nivel_punteros);
+                    #endif
                     //salvamos en el dispositivo el buffer de punteros modificado
                     if(bwrite(ptr_ant, buffer) == FALLO){
                         fprintf(stderr, RED"Error: escritura1 de indice en traducir bloque inodo\n"RESET);
@@ -608,7 +609,7 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
     if(ptr == 0){
         //error lectura ∄ bloque -> no imprimir error por pantalla!!!
         if(reservar == 0){
-            return -1;
+            return FALLO;
         }else{
             ptr = reservar_bloque();//de datos
             inodo->numBloquesOcupados++;
@@ -617,15 +618,19 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
             if(nRangoBL == 0){
                 //asignamos la direción del bl. de datos en el inodo
                 inodo->punterosDirectos[nblogico] = ptr;
-                fprintf(stderr, GRAY
-                    "[traducir_bloque_inodo()→ inodo.punterosDirectos[%d] = %d (reservado BF %d para BL %d)]\n\n"RESET,
-                    nblogico, ptr, ptr, nblogico);
+                #if DEBUGN4
+                    fprintf(stderr, GRAY
+                        "[traducir_bloque_inodo()→ inodo.punterosDirectos[%d] = %d (reservado BF %d para BL %d)]\n\n"RESET,
+                        nblogico, ptr, ptr, nblogico);
+                #endif
             }else{
                 //asignamos la dirección del bloque de datos en el buffer
                 buffer[indice] = ptr;
-                fprintf(stderr, GRAY
-                    "[traducir_bloque_inodo()→ punteros_nivel%d [%d] = %d (reservado BF %d para BL %d)]\n\n"RESET,
-                    nivel_punteros, indice, ptr, ptr, nblogico);
+                #if DEBUGN4
+                    fprintf(stderr, GRAY
+                        "[traducir_bloque_inodo()→ punteros_nivel%d [%d] = %d (reservado BF %d para BL %d)]\n\n"RESET,
+                        nivel_punteros, indice, ptr, ptr, nblogico);
+                #endif
                  //salvamos en el dispositivo el buffer de punteros modificado
                 if(bwrite(ptr_ant, buffer) == FALLO){
                     fprintf(stderr, RED"Error: escritura2 de indice en traducir bloque inodo\n"RESET);

@@ -1,9 +1,6 @@
 #include "pruebas_fichero.h"
 
 int main(int argc, char **argv){
-    /****************************************************************************/
-    /*                                nivel 2                                   */
-    /****************************************************************************/
     //montar el dispositivo virtual
     bmount(argv[1]);
 
