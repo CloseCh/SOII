@@ -58,7 +58,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     }
     // Actualizar el tamaño en bytes lógicos (si es necesario)
     if((offset+nbytes)>inodo.tamEnBytesLog){
-        inodo.tamEnBytesLog=offset+nbytes;
+        inodo.tamEnBytesLog=offset+nbytes; //HAY QUE ACTUALIZAR EL NUMERO DE BLOQUES OCUPADOS?!!!
     }
     // Actualizar el mtime (porque hemos escrito en la zona de datos).
     inodo.mtime = time(NULL);
@@ -77,7 +77,21 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
 int mi_stat_f(unsigned int ninodo, struct STAT *p_stat)
 {
-    return FALLO;
+    struct inodo inodo;
+    leer_inodo(ninodo,&inodo);
+
+    p_stat->tipo=inodo.tipo;
+    p_stat->permisos=inodo.permisos;
+
+    p_stat->atime=inodo.atime;
+    p_stat->ctime=inodo.ctime;
+    p_stat->mtime=inodo.mtime;
+
+    p_stat->nlinks=inodo.nlinks;
+    p_stat->tamEnBytesLog=inodo.tamEnBytesLog;
+    p_stat->numBloquesOcupados=inodo.numBloquesOcupados;
+    
+    return EXITO;
 }
 
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos)
