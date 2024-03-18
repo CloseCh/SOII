@@ -1,4 +1,4 @@
-#include "ficheros_basico.h"
+#include "ficheros.h"
 
 //Pruebas de cada nivel
 
@@ -17,4 +17,11 @@ int lecturaInodo(struct superbloque bufferSB);
 int pruebaN3();
 int leerBit(struct superbloque bufferSB);
 int reservaProf(struct superbloque bufferSB);
-int leerRaiz(struct superbloque bufferSB);
+int leerInodo(struct superbloque bufferSB, unsigned int pos);
+
+/*********************************************************************/
+/*                              nivel 4                              */
+/*********************************************************************/
+
+int pruebaN4();
+int traducirBloqueLogico(struct superbloque bufferSB);

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "ficheros_basico.h"
+#include "ficheros.h"
 
 
 int main(int argc, char **argv){

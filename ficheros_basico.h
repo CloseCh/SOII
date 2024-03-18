@@ -11,6 +11,8 @@
 #define INDIRECTOS1 (NPUNTEROS * NPUNTEROS + INDIRECTOS0)    // 65.804
 #define INDIRECTOS2 (NPUNTEROS * NPUNTEROS * NPUNTEROS + INDIRECTOS1) // 16.843.020
 
+#define DEBUGN4 1
+
 struct superbloque {
     unsigned int posPrimerBloqueMB;          // Posición absoluta del primer bloque del mapa de bits
     unsigned int posUltimoBloqueMB;          // Posición absoluta del último bloque del mapa de bits
@@ -212,7 +214,9 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos);
 /*
  * Function: obtener_nRangoBL
  * ----------------------------
- *  ---
+ *  Para obtener el rango de punteros en el que se sitúa el bloque lógico que buscamos
+ *  (0:D, 1:I0, 2:I1, 3:I2), y obtenemos además la dirección almacenada en el puntero 
+ *  correspondiente del inodo.
  *   
  *  struct inodo *inodo: structura para posicionar el puntero
  *  
@@ -227,27 +231,31 @@ int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *p
 /*
  * Function: obtener_indice
  * ----------------------------
- *  ---
+ *  Consigue el indice del bloque de punteros pasandole por parámetros el número
+ *  del bloque lógico y el nivel de punteros en que se encuentra.
  *  
- *  unsigned int nblogico: ---
+ *  unsigned int nblogico: número de bloque lógico que queremos comprobar 
  * 
- *  int nivel_punteros: ---
+ *  int nivel_punteros: nivel del bloque de punteros (1,2 o 3).
  * 
- *  returns: ---
+ *  returns: indice del bloque de punteros.
  */
 int obtener_indice(unsigned int nblogico, int nivel_punteros);
 
 /*
  * Function: traducir_bloque_inodo
  * ----------------------------
- *  ---
+ *  Esta función se encarga de obtener el nº de bloque físico correspondiente a un 
+ *  bloque lógico determinado del inodo indicado. Enmascara la gestión de los diferentes 
+ *  rangos de punteros directos e indirectos del inodo, de manera que funciones externas no 
+ *  tienen que preocuparse de cómo acceder a los bloques físicos apuntados desde el inodo.
  *  
- *  struct inodo *inodo: ---
+ *  struct inodo *inodo: inodo que contiene el fichero o directorio.
  * 
- *  unsigned int nblogico: ---
+ *  unsigned int nblogico: el bloque logico reservado
  * 
- *  unsigned char reservar: ---
+ *  unsigned char reservar: 0 para consulta, 1 para reservar.
  * 
- *  returns: ---
+ *  returns: el bloque logico reservado, -1 si error.
  */
 int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned char reservar);

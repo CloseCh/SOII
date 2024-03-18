@@ -53,21 +53,21 @@ int lecturaInodo(struct superbloque bufferSB){
     printf ("\n");
     
     //Leer lista enlazada de los inodos:
-    //printf("RECORRIDO LISTA ENLAZADA DE INODOS LIBRES");
-    //unsigned int i = 1;
-    //unsigned int cantidadAI = bufferSB.posUltimoBloqueAI - bufferSB.posPrimerBloqueAI + 1;
-    //while(i <= cantidadAI){
-    //    for(int j = 0; j < BLOCKSIZE/INODOSIZE; j++){
-    //        printf("%d ",bufferAI[j].punterosDirectos[0]);
-    //    }
-    //    //Leer el siguiente bloque AI
-    //    if(bread(bufferSB.posPrimerBloqueAI + i, &bufferAI) == FALLO){
-    //        fprintf(stderr, RED
-    //            "Error: lectura AI\n"RESET);
-    //        return FALLO;
-    //    }
-    //    i++;
-    //}
+    printf("RECORRIDO LISTA ENLAZADA DE INODOS LIBRES");
+    unsigned int i = 1;
+    unsigned int cantidadAI = bufferSB.posUltimoBloqueAI - bufferSB.posPrimerBloqueAI + 1;
+    while(i <= cantidadAI){
+        for(int j = 0; j < BLOCKSIZE/INODOSIZE; j++){
+            printf("%d ",bufferAI[j].punterosDirectos[0]);
+        }
+        //Leer el siguiente bloque AI
+        if(bread(bufferSB.posPrimerBloqueAI + i, &bufferAI) == FALLO){
+            fprintf(stderr, RED
+                "Error: lectura AI\n"RESET);
+            return FALLO;
+        }
+        i++;
+    }
     printf ("\n");
 
     return EXITO;
@@ -94,7 +94,8 @@ int pruebaN3(){
     printf ("\n");
 
     //Leer directorio raiz reservado
-    leerRaiz(bufferSB);
+    printf ("DATOS DEL DIRECTORIO RAIZ\n");
+    leerInodo(bufferSB,0);
     printf ("\n");
 
     printf ("\n");
@@ -156,7 +157,7 @@ int reservaProf(struct superbloque bufferSB){
     return EXITO;
 }
 
-int leerRaiz(struct superbloque bufferSB){
+int leerInodo(struct superbloque bufferSB, unsigned int pos){
     struct inodo inodos [BLOCKSIZE/INODOSIZE];
 
     //Lectura del inodos
@@ -166,16 +167,76 @@ int leerRaiz(struct superbloque bufferSB){
         return FALLO;
     }
 
-    printf ("DATOS DEL DIRECTORIO RAIZ\n");
-    printf ("tipo: %c\n", inodos[0].tipo);
-    printf ("permisos: %d\n", inodos[0].permisos);
-    printf ("atime: %s", ctime(&inodos[0].atime));
-    printf ("ctime: %s", ctime(&inodos[0].ctime));
-    printf ("mtime: %s", ctime(&inodos[0].mtime));
-    printf ("nlinks: %d\n", inodos[0].nlinks);   
-    printf ("tamEnBytesLog: %d\n", inodos[0].tamEnBytesLog);
-    printf ("numBloquesOcupados: %d\n", inodos[0].numBloquesOcupados);  
+    printf ("tipo: %c\n", inodos[pos].tipo);
+    printf ("permisos: %d\n", inodos[pos].permisos);
+    printf ("atime: %s", ctime(&inodos[pos].atime));
+    printf ("ctime: %s", ctime(&inodos[pos].ctime));
+    printf ("mtime: %s", ctime(&inodos[pos].mtime));
+    printf ("nlinks: %d\n", inodos[pos].nlinks);   
+    printf ("tamEnBytesLog: %d\n", inodos[pos].tamEnBytesLog);
+    printf ("numBloquesOcupados: %d\n", inodos[pos].numBloquesOcupados);  
 
+
+    return EXITO;
+}
+
+int pruebaN4(){
+    struct superbloque bufferSB;
+    if(bread(posSB, &bufferSB) == FALLO){
+        fprintf(stderr, RED
+            "Error: lectura SB\n"RESET);
+        return FALLO;
+    }
+
+    //Ver dato del superbloque
+    lecturaSB(bufferSB);
+    printf ("\n");
+
+    //Traducción de bloques logicos
+    printf ("INODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30.004, 400.004 y 468.750\n\n");
+    traducirBloqueLogico(bufferSB);
+    printf ("\n");
+
+    //DATOS D(EL INODO RESERVADO 1
+    printf ("DATOS DEL DIRECTORIO RAIZ\n");
+    leerInodo(bufferSB,1);
+    printf ("\n");
+
+    //Actualizar el buffer
+    if(bread(posSB, &bufferSB) == FALLO){
+        fprintf(stderr, RED
+            "Error: lectura SB\n"RESET);
+        return FALLO;
+    }
+    //Ver inodos libres
+    printf ("posPrimerInodoLibre = %i \n", bufferSB.posPrimerInodoLibre);
+    printf ("\n");
+    return EXITO;
+}
+
+int traducirBloqueLogico(struct superbloque bufferSB){
+    struct inodo inodos [BLOCKSIZE/INODOSIZE];
+
+    reservar_inodo('f',6);
+    
+    //Lectura del inodos
+    if(bread(bufferSB.posPrimerBloqueAI, inodos) == FALLO){
+        fprintf(stderr, RED
+            "Error: lectura inodo en leerRaiz\n"RESET);
+        return FALLO;
+    }
+    
+    traducir_bloque_inodo(&inodos[1], 8, 1);
+    traducir_bloque_inodo(&inodos[1], 204, 1);
+    traducir_bloque_inodo(&inodos[1], 30004, 1);
+    traducir_bloque_inodo(&inodos[1], 400004, 1);
+    traducir_bloque_inodo(&inodos[1], 468750, 1);
+
+    if(bwrite(bufferSB.posPrimerBloqueAI, inodos) == FALLO){
+        fprintf(stderr, RED
+            "Error: lectura inodo en leerRaiz\n"RESET);
+        return FALLO;
+    }
 
     return EXITO;
 }
