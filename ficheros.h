@@ -70,12 +70,13 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
 /*
  * Function: mi_chmod_f
  * ----------------------------
- *  ---
- *   
- *  unsigned int ninodo: ---
+ *  Cambia los permisos de un fichero/directorio que corresponde con ninodo con el argumento permisos
+ *  Finalmente actualizamos ctime 
+ *  
+ *  unsigned int ninodo: numero de inodo que vamos a modificar
  * 
- *  unsigned char permisos: ---
+ *  unsigned char permisos: nuevos permisos que actualizaremos al inodo
  *
- *  returns: ---
+ *  returns: 0
  */
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos);
