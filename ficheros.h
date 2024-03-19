@@ -36,17 +36,21 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 /*
  * Function: mi_read_f
  * ----------------------------
- * ---
+ * Lee información de un fichero/directorio (correspondiente al nº de inodo, ninodo, 
+ * pasado como argumento) y la almacena en un buffer de memoria, buf_original: le indicamos 
+ * la posición de lectura inicial offset con respecto al inodo (en bytes) y el número de bytes 
+ * nbytes que hay que leer.
+
  *   
- *  unsigned int ninodo: ---
+ *  unsigned int ninodo: numero de inodo correspondiente
  * 
- *  const void *buf_original: ---
+ *  const void *buf_original: buffer que se desea leer (inicializado a 0s)
  * 
- *  unsigned int offset: ---
+ *  unsigned int offset: posición inicial en bytes lógicos
  * 
- *  unsigned int nbytes: ---
+ *  unsigned int nbytes: número de bytes a leer
  *
- *  returns: ---
+ *  returns: cantidad de bytes leidos
  */
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes);
 
