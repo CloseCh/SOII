@@ -72,7 +72,75 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes)
 {
-    return FALLO;
+    struct inodo inodo;
+    leer_inodo(ninodo,&inodo);
+    int leidos;
+    if ((inodo.permisos & 4) != 4) {
+       fprintf(stderr, RED "No hay permisos de lectura\n" RESET);
+       return FALLO;
+    }
+    if (offset>= inodo.tamEnBytesLog){
+        leidos=0;   //No podemos leer nada
+        return leidos;
+
+    }
+    if((offset+nbytes)>= inodo.tamEnBytesLog){
+        nbytes=inodo.tamEnBytesLog-offset;
+        //Leemos solo los bytes desde el offset hasta EOF
+    }
+    int primerBL = offset / BLOCKSIZE;
+    int ulitmoBL = (offset + nbytes - 1) / BLOCKSIZE;
+    //En traducir reservar=0, por lo que puede retornar -1
+    int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 0);
+    int desp1 = offset % BLOCKSIZE;
+    int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
+
+    unsigned char buf_bloque[BLOCKSIZE];
+    //Si no hay bloque fisico no hay que hacer el bread ni memcpy
+    //Pero si que hay que sumar los bytes leidos
+    if(nbfisico !=-1){
+        bread(nbfisico, buf_bloque);
+        memcpy(buf_bloque + desp1, buf_original, nbytes);
+    }else{
+
+        leidos=+nbytes;
+    }
+    
+    //Mismos casos que mi_write, en vez de escribir lee
+    if(primerBL == ulitmoBL){
+        memcpy(buf_bloque + desp1, buf_original, nbytes);
+        // escribir buf_bloque modificado en el nº de bloque físico correspondiente
+        bwrite(nbfisico, buf_bloque);
+        // bytes escritos
+        leidos=+nbytes;
+
+
+    }else
+    { // caso2: hay que escribir en más de un bloque
+        // FASE 1: PRIMER BLOQUE LÓGICO
+        memcpy(buf_bloque + desp1, buf_original, BLOCKSIZE - desp1);
+        bread(nbfisico, buf_bloque);
+        // Acumular bytes escritos.
+        leidos=+(BLOCKSIZE-desp1);
+        // FASE 2: BLOQUES LÓGICOS INTERMEDIOS
+        for (int bl=primerBL+1;bl<ulitmoBL-1;bl++){ //CONFIRMAR SI ES +1 O NO !!!
+            bread(nbfisico, buf_original + (BLOCKSIZE - desp1) + (bl - primerBL - 1) * BLOCKSIZE);
+            // Acumular bytes escritos
+            leidos=+BLOCKSIZE;
+        }
+        // FASE 3:ÚLTIMO BLOQUE LÓGICO
+        nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 0);
+        bread(nbfisico, buf_bloque);
+
+        memcpy(buf_bloque, buf_original + (nbytes - (desp2 + 1)), desp2 + 1);
+        bread(nbfisico, buf_bloque);
+        // Acumular bytes escritos
+        leidos=+(desp2+1);
+    }
+    //Actualizamos atime
+    inodo.atime=time(NULL);
+
+    return leidos;
 }
 
 int mi_stat_f(unsigned int ninodo, struct STAT *p_stat)
