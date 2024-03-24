@@ -25,3 +25,8 @@ int leerInodo(struct superbloque bufferSB, unsigned int pos);
 
 int pruebaN4();
 int traducirBloqueLogico(struct superbloque bufferSB);
+
+/*********************************************************************/
+/*                              nivel 5                              */
+/*********************************************************************/
+int pruebaN5();

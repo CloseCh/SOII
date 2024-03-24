@@ -240,3 +240,18 @@ int traducirBloqueLogico(struct superbloque bufferSB){
 
     return EXITO;
 }
+
+int pruebaN5(){
+    struct superbloque bufferSB;
+    if(bread(posSB, &bufferSB) == FALLO){
+        fprintf(stderr, RED
+            "Error: lectura SB\n"RESET);
+        return FALLO;
+    }
+
+    //Ver dato del superbloque
+    lecturaSB(bufferSB);
+    printf ("\n");
+
+    return EXITO;
+}

@@ -17,6 +17,9 @@ int main(int argc, char **argv){
     case 4:
         pruebaN4();
         break;
+    case 5:
+        pruebaN5();
+        break;
     default:
         printf (RED"Nivel no implementada.\n"RESET);
         break;
