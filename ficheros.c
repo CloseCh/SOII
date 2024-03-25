@@ -91,57 +91,57 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     if((offset+nbytes) >= inodo.tamEnBytesLog)
         //Leemos solo los bytes desde el offset hasta EOF
         nbytes = inodo.tamEnBytesLog-offset;
-        
     
+    unsigned char buf_bloque[nbytes];
+    memset(buf_bloque, 0, nbytes);
+
     int primerBL = offset / BLOCKSIZE;
     int ulitmoBL = (offset + nbytes - 1) / BLOCKSIZE;
     //En traducir reservar=0, por lo que puede retornar -1
-    int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 0);
     int desp1 = offset % BLOCKSIZE;
     int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
+    unsigned int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 0);
 
-    unsigned char buf_bloque[BLOCKSIZE];
-    //Si no hay bloque fisico no hay que hacer el bread ni memcpy
-    //Pero si que hay que sumar los bytes leidos
-    if (nbfisico != -1) {
-        if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-        memcpy(buf_bloque + desp1, buf_original, nbytes);
-    } else leidos += BLOCKSIZE;
-    
     //Mismos casos que mi_write, en vez de escribir lee
     if(primerBL == ulitmoBL){
-        memcpy(buf_bloque + desp1, buf_original, nbytes);
-        // escribir buf_bloque modificado en el nº de bloque físico correspondiente
-        if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-        // bytes escritos
-        leidos += nbytes;
+        if (nbfisico != -1) {
+            if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+            memcpy(buf_original, buf_bloque, nbytes);
+            leidos += nbytes;
+        } else leidos += nbytes;
 
     // caso2: hay que escribir en más de un bloque
     } else { 
         // FASE 1: PRIMER BLOQUE LÓGICO
-        memcpy(buf_bloque + desp1, buf_original, BLOCKSIZE - desp1);
-        if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+        if (nbfisico != -1) {
+            if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+            memcpy(buf_original, buf_bloque, nbytes - 1);
+        }
         // Acumular bytes escritos.
-        leidos += (BLOCKSIZE-desp1);
+        leidos += nbytes;
         // FASE 2: BLOQUES LÓGICOS INTERMEDIOS
         for (int bl = primerBL+1; bl < ulitmoBL; bl++){
             nbfisico = traducir_bloque_inodo(&inodo, bl, 0);
-            if (bread(nbfisico, buf_original + (BLOCKSIZE - desp1) + (bl - primerBL - 1) * BLOCKSIZE) == FALLO) return FALLO;
+            if (nbfisico != -1) {
+                if (bread(nbfisico, buf_original + (BLOCKSIZE - desp1) + (bl - primerBL - 1) * BLOCKSIZE) == FALLO) return FALLO;
+                memcpy(buf_original, buf_bloque + desp1, nbytes);
+                leidos += BLOCKSIZE;
+            } else leidos += BLOCKSIZE;
             // Acumular bytes escritos
-            leidos += BLOCKSIZE;
         }
         // FASE 3:ÚLTIMO BLOQUE LÓGICO
         nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 0);
-        bread(nbfisico, buf_bloque);
-
-        memcpy(buf_bloque, buf_original + (nbytes - (desp2 + 1)), desp2 + 1);
-        bread(nbfisico, buf_bloque);
+        if (nbfisico != -1) {
+            if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+            memcpy(buf_bloque, buf_original + (nbytes - (desp2 + 1)), desp2 + 1);
+        } else leidos += BLOCKSIZE;
         // Acumular bytes escritos
         leidos += (desp2+1);
     }
     //Actualizamos atime
     inodo.atime = time(NULL);
 
+    escribir_inodo(ninodo, &inodo);
     return leidos;
 }
 

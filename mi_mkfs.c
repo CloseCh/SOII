@@ -12,6 +12,7 @@ int main(int argc, char **argv){
     unsigned int ninodos = nbloques/4;
     unsigned char buf[BLOCKSIZE];
 
+    
     //inicializar a 0s el fichero usado como dispositivo virtual
     memset(buf, '\0', BLOCKSIZE); // '\0' o '0'
     for(int i = 0; i < nbloques; i++){
