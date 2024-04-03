@@ -92,8 +92,8 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         //Leemos solo los bytes desde el offset hasta EOF
         nbytes = inodo.tamEnBytesLog-offset;
     
-    unsigned char buf_bloque[nbytes];
-    memset(buf_bloque, 0, nbytes);
+    unsigned char buf_bloque[BLOCKSIZE];
+    //memset(buf_bloque, 0, nbytes);
 
     int primerBL = offset / BLOCKSIZE;
     int ulitmoBL = (offset + nbytes - 1) / BLOCKSIZE;
