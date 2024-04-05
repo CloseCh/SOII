@@ -259,3 +259,13 @@ int obtener_indice(unsigned int nblogico, int nivel_punteros);
  *  returns: el bloque logico reservado, -1 si error.
  */
 int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned char reservar);
+
+/**
+ * 
+*/
+int liberar_inodo(unsigned int ninodo);
+
+/**
+ * 
+*/
+int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo);

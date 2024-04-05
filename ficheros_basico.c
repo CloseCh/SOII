@@ -641,4 +641,113 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
     }
 
     return ptr;
-}   
+}
+
+
+int liberar_inodo(unsigned int ninodo){
+    struct inodo inodo;
+    struct superbloque SB;
+    int bloques_liberados=0;
+    //leer el inodo
+    leer_inodo(ninodo,&inodo);
+    //liberar todos los bloques del inodo
+    bloques_liberados=liberar_bloques_inodos(0,&inodo);
+    //actualizar cantidad de bloques ocupados del inodo (debería quedar a 0)
+    inodo.numBloquesOcupados=inodo.numBloquesOcupados-bloques_liberados;
+    //marcar el inodo como tipo libre y tamEnBytesLog=0
+    inodo.tipo='l';
+    inodo.tamEnBytesLog=0;
+    //actualizar la lista enlazada de inodos libres
+    //leer el superbloque
+    if(bread(posSB, &SB) == FALLO){
+        fprintf(stderr, RED
+            "Error: lectura SB en liberar_inodo \n"RESET);
+        return FALLO;
+    }
+    //incluir el inodo que queremos liberar en la lista de inodos libres
+    inodo.punterosDirectos[0]=SB.posPrimerInodoLibre;
+    SB.posPrimerInodoLibre=ninodo;
+    //incrementar la cantidad de inodos libres
+    SB.cantInodosLibres++;
+    // escribir el superbloque en el dispositivo virtual
+    if(bwrite(posSB, &SB) == FALLO) {
+        fprintf(stderr, RED"Error: escritura superbloque en liberar_inodo\n"RESET);
+        return FALLO;
+    }
+    //actualizar el ctime
+    inodo.ctime=time(NULL);
+    //escribir el inodo actualizado en el dispositivor virtual
+    escribir_inodo(ninodo,&inodo);
+    //devolver el nº del inodo liberado
+    return ninodo;
+}
+
+
+int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
+    unsigned int nivel_punteros,indice,ptr=0,nBL,ultimoBL; 
+    int nRangoBL;
+    unsigned int bloques_punteros[3][NPUNTEROS]; //array de bloques de punteros
+    unsigned int bufAux_punteros[NPUNTEROS]; // para llenar de 0s y comparar
+    int ptr_nivel[3]; //punteros a bloques de punteros de cada nivel
+    int indices[3]; //indices de cada nivel
+    int liberados=0; //nº de bloques liberados
+
+    if (inodo->tamEnBytesLog==0){
+        return liberados;
+    }
+
+    if (inodo->tamEnBytesLog%BLOCKSIZE==0){
+        ultimoBL=inodo->tamEnBytesLog/BLOCKSIZE-1;
+    }else{
+        ultimoBL=inodo->tamEnBytesLog/BLOCKSIZE;
+    }
+
+    memset(bufAux_punteros,0,BLOCKSIZE);
+
+    for (nBL=primerBL;nBL<=ultimoBL;nBL++){ // ¿¿ <= o < ??
+        nRangoBL=obtener_nRangoBL(inodo,nBL,&ptr);
+        if(nRangoBL<0) return FALLO;
+        nivel_punteros=nRangoBL;
+        while(ptr>0 && nivel_punteros > 0){
+            indice=obtener_indice(nBL,nivel_punteros);
+            if(indice==0 || nBL==primerBL){
+                bread(ptr,bloques_punteros[nivel_punteros-1]);
+            }
+            ptr_nivel[nivel_punteros-1]=ptr;
+            indices[nivel_punteros-1]=indice;
+            ptr=bloques_punteros[nivel_punteros-1][indice];
+            nivel_punteros--;
+        }
+
+        if (ptr > 0){
+            liberar_bloque(ptr);
+            liberados++;
+            if(nRangoBL==0){
+                inodo->punterosDirectos[nBL]=0;
+            }else{
+                nivel_punteros=1;
+                while(nivel_punteros<=nRangoBL){
+                    indice=indices[nivel_punteros-1];
+                    bloques_punteros[nivel_punteros-1][indice]=0;
+                    ptr=ptr_nivel[nivel_punteros-1];
+                    if(memcmp(bloques_punteros[nivel_punteros-1],bufAux_punteros,BLOCKSIZE)==0){
+                        liberar_bloque(ptr);
+                        liberados++;
+                        //incluir mejora 1
+                        if(nivel_punteros==nRangoBL){
+                            inodo->punterosIndirectos[nRangoBL-1]=0;
+                        }
+                        nivel_punteros++;
+                    }else{
+                        bwrite(ptr,bloques_punteros[nivel_punteros-1]);
+                        nivel_punteros=nRangoBL+1;
+                    }
+                }
+            }
+
+        }else{
+                //incluir mejora 2
+        }
+    }
+    return liberados;
+}
