@@ -683,7 +683,7 @@ int liberar_inodo(unsigned int ninodo){
 }
 
 
-int liberar_bloques_inodos(unsigned int primerBL,struct inodo *inodo){
+int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
     unsigned int nivel_punteros,indice,ptr=0,nBL,ultimoBL; 
     int nRangoBL;
     unsigned int bloques_punteros[3][NPUNTEROS]; //array de bloques de punteros
