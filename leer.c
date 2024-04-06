@@ -13,13 +13,22 @@ int main(int argc, char **argv){
     leidos = offset = total_leido = 0;
     ninodo = atoi(argv[2]);
 
-    //Leemos el inodo para saber cuantos bytes hay que leer
+    //Leemos el inodo
+    struct inodo inodo;
+    leer_inodo(ninodo,&inodo);
 
     int tambuffer = BLOCKSIZE;
     char buffer_texto[tambuffer];
     
     memset(buffer_texto, 0, tambuffer);
     leidos = mi_read_f(ninodo, buffer_texto, offset, tambuffer);
+    if (leidos == -1) {
+        char string[256];
+        sprintf(string, "\ntotal_leidos 0\ntamEnBytesLog %d\n",inodo.tamEnBytesLog);
+        write(2, string, strlen(string));
+        exit(FALLO);
+    }
+
     while (leidos > 0){
         write(1,buffer_texto,leidos);
         offset += tambuffer;
@@ -28,11 +37,11 @@ int main(int argc, char **argv){
         leidos = mi_read_f(ninodo, buffer_texto, offset, tambuffer);
     }
 
-    char string[128];
-    sprintf(string, "total_leidos %d\n", total_leido);
+    char string[256];
+    sprintf(string, "\ntotal_leidos %d\ntamEnBytesLog %d \n", total_leido,inodo.tamEnBytesLog);
     write(2, string, strlen(string));
 
-    bumount(argv[1]);
+    bumount();
 
     return EXITO;
 }

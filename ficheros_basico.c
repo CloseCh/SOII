@@ -651,7 +651,7 @@ int liberar_inodo(unsigned int ninodo){
     //leer el inodo
     leer_inodo(ninodo,&inodo);
     //liberar todos los bloques del inodo
-    bloques_liberados=liberar_bloques_inodos(0,&inodo);
+    bloques_liberados=liberar_bloques_inodo(0,&inodo);
     //actualizar cantidad de bloques ocupados del inodo (debería quedar a 0)
     inodo.numBloquesOcupados=inodo.numBloquesOcupados-bloques_liberados;
     //marcar el inodo como tipo libre y tamEnBytesLog=0
@@ -746,7 +746,7 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
             }
 
         }else{
-                //incluir mejora 2
+            //incluir mejora 2
         }
     }
     return liberados;
