@@ -15,7 +15,7 @@ int main(int argc, char **argv){
     int permiso = atoi(argv[3]);
     mi_chmod_f(ninodo, permiso);
 
-    bumount(argv[3]);
+    bumount();
 
     return EXITO;
 }

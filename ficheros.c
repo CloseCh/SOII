@@ -172,6 +172,8 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos)
     inodo.permisos=permisos;
     //Actualizamos ctime
     inodo.ctime= time(NULL);
+    escribir_inodo(ninodo,&inodo);
+    
     return EXITO;
 }
 
