@@ -178,6 +178,7 @@ int initAI(){
 /*****************************************************************************************/
 /*                                       NIVEL 3                                         */
 /*****************************************************************************************/
+
 int escribir_bit(unsigned int nbloque, unsigned int bit){
     struct superbloque SB;
     if(bread(posSB, &SB) == FALLO) {
@@ -647,6 +648,7 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
 int liberar_inodo(unsigned int ninodo){
     struct inodo inodo;
     struct superbloque SB;
+
     int bloques_liberados=0;
     //leer el inodo
     leer_inodo(ninodo,&inodo);
@@ -682,7 +684,6 @@ int liberar_inodo(unsigned int ninodo){
     return ninodo;
 }
 
-
 int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
     unsigned int nivel_punteros,indice,ptr=0,nBL,ultimoBL; 
     int nRangoBL;
@@ -696,6 +697,7 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
         return liberados;
     }
 
+    //obtenemos el último bloque lógico del inodo
     if (inodo->tamEnBytesLog%BLOCKSIZE==0){
         ultimoBL=inodo->tamEnBytesLog/BLOCKSIZE-1;
     }else{
@@ -704,13 +706,16 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
 
     memset(bufAux_punteros,0,BLOCKSIZE);
 
-    for (nBL=primerBL;nBL<=ultimoBL;nBL++){ // ¿¿ <= o < ??
-        nRangoBL=obtener_nRangoBL(inodo,nBL,&ptr);
+    for (nBL=primerBL;nBL<=ultimoBL;nBL++){ // ¿¿ <= o < ?? recorrido BLs
+        nRangoBL=obtener_nRangoBL(inodo,nBL,&ptr);  //0:D, 1:I0, 2:I1, 3:I2
         if(nRangoBL<0) return FALLO;
-        nivel_punteros=nRangoBL;
+        nivel_punteros=nRangoBL; //el nivel_punteros +alto cuelga del inodo
+
+        //cuelgan bloques de punteros
         while(ptr>0 && nivel_punteros > 0){
             indice=obtener_indice(nBL,nivel_punteros);
             if(indice==0 || nBL==primerBL){
+                //solo hay que leer del dispositivo si no está ya cargado previamente en un buffer
                 bread(ptr,bloques_punteros[nivel_punteros-1]);
             }
             ptr_nivel[nivel_punteros-1]=ptr;
@@ -721,6 +726,7 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
 
         if (ptr > 0){
             liberar_bloque(ptr);
+            fprintf(stderr, GRAY"[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n"RESET, ptr, nBL);
             liberados++;
             if(nRangoBL==0){
                 inodo->punterosDirectos[nBL]=0;
@@ -732,8 +738,12 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                     ptr=ptr_nivel[nivel_punteros-1];
                     if(memcmp(bloques_punteros[nivel_punteros-1],bufAux_punteros,BLOCKSIZE)==0){
                         liberar_bloque(ptr);
+                        fprintf(stderr, GRAY"[liberar_bloques_inodo()→ liberado BF %d de punteros_nivel%d correspondiente al BL %d]\n"RESET, ptr, nivel_punteros ,nBL);
                         liberados++;
                         //incluir mejora 1
+                        unsigned int oldBL = nBL;
+                        //while ()
+
                         if(nivel_punteros==nRangoBL){
                             inodo->punterosIndirectos[nRangoBL-1]=0;
                         }
@@ -746,7 +756,15 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
             }
 
         }else{
-            //incluir mejora 2
+            // No salta bien los indirectos 2 y 3
+            if (ptr==0 && nivel_punteros > 0 && memcmp(bloques_punteros[nivel_punteros-1],bufAux_punteros,BLOCKSIZE)==0){
+                unsigned int oldBL = nBL;
+                int nSaltar = NPUNTEROS - ((nBL-12) % NPUNTEROS) - 1;
+                nBL += nSaltar;
+                fprintf(stderr, GREEN"[liberar_bloques_inodo()→ Del BL %d saltamos hasta BL %d]\n"RESET,oldBL,nBL);
+            }
+
+            
         }
     }
     return liberados;
