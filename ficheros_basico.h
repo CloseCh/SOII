@@ -260,9 +260,15 @@ int obtener_indice(unsigned int nblogico, int nivel_punteros);
  */
 int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned char reservar);
 
-/**
+/*
+ * Function: liberar_inodo
+ * ----------------------------
+ *  Liberar el inodo indicado y actualizar el campo de inodos libres del SB.
+ *  
+ *  unsigned int ninodo: la posicion del inodo a eliminar.
  * 
-*/
+ *  returns: el bloque logico reservado, -1 si error.
+ */
 int liberar_inodo(unsigned int ninodo);
 
 /**
