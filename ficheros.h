@@ -29,7 +29,7 @@ struct STAT {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
  * 
  *  unsigned int nbytes: número de bytes a escribir
  *
- *  returns: la cantidad de bytes escritos
+ *  returns: la cantidad de bytes escritos, -1 si error.
  */
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes);
 
@@ -50,7 +50,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
  * 
  *  unsigned int nbytes: número de bytes a leer
  *
- *  returns: cantidad de bytes leidos
+ *  returns: cantidad de bytes leidos, -1 si error.
  */
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes);
 
@@ -67,7 +67,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
  * 
  *  struct STAT *p_stat: struct STAT (igual que inodo pero sin punteros)
  *
- *  returns: ---
+ *  returns: 0 si todo va bien, -1 si error.
  */
 int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
 
@@ -81,11 +81,20 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
  * 
  *  unsigned char permisos: nuevos permisos que actualizaremos al inodo
  *
- *  returns: 0
+ *  returns: 0 si todo va bien, -1 si error.
  */
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos);
 
-/**
+/*
+ * Function: mi_truncar_f
+ * ----------------------------
+ *  Trunca un fichero/directorio (correspondiente al nº de inodo, ninodo, pasado como argumento)
+ *  a los bytes indicados como nbytes, liberando los bloques necesarios.
+ *  
+ *  unsigned int ninodo: numero de inodo que vamos a modificar
  * 
-*/
+ *  unsigned int nbytes: 
+ *
+ *  returns: 0 si todo va bien, -1 si error.
+ */
 int mi_truncar_f(unsigned int ninodo,unsigned int nbytes);

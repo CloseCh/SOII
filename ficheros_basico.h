@@ -271,7 +271,15 @@ int traducir_bloque_inodo(struct inodo *inodo, unsigned int nblogico, unsigned c
  */
 int liberar_inodo(unsigned int ninodo);
 
-/**
+/*
+ * Function: liberar_inodo
+ * ----------------------------
+ *  Liberar el inodo indicado y actualizar el campo de inodos libres del SB.
+ *  
+ *  unsigned int primerB: Desde que bloque lógico se libera.
  * 
-*/
+ *  struct inodo *inodo: Inodo del que se va a eliminar bloques.
+ * 
+ *  returns: bloques liberados en total, -1 si error.
+ */
 int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo);

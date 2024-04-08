@@ -1,5 +1,9 @@
 #include "ficheros.h"
 
+/*****************************************************************************************/
+/*                                       NIVEL 5                                         */
+/*****************************************************************************************/
+
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
     struct inodo inodo;
     leer_inodo(ninodo, &inodo);
@@ -55,10 +59,12 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         }
         // FASE 3:ÚLTIMO BLOQUE LÓGICO
         nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 1);
-        bread(nbfisico, buf_bloque);
+        if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+        
 
         memcpy(buf_bloque, buf_original + (nbytes - (desp2 + 1)), desp2 + 1);
-        bwrite(nbfisico, buf_bloque);
+        if (bwrite(nbfisico, buf_bloque) == FALLO) return FALLO;
+        
         // Acumular bytes escritos
         bytes_escritos += (desp2+1);
     }
@@ -71,14 +77,14 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     // Actualizar el ctime  (porque hemos actualizado campos del inodo).
     inodo.ctime = time(NULL);
     // Salvar el inodo con escribir_inodo().
-    escribir_inodo(ninodo, &inodo);
+    if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
 
     return bytes_escritos;
 }
 
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes){
     struct inodo inodo;
-    leer_inodo(ninodo, &inodo);
+    if (leer_inodo(ninodo,&inodo) == FALLO) return FALLO;
     if ((inodo.permisos & 4) != 4) {
        fprintf(stderr, RED "No hay permisos de lectura\n"RESET);
        return FALLO;
@@ -141,14 +147,14 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     //Actualizamos atime
     inodo.atime = time(NULL);
 
-    escribir_inodo(ninodo, &inodo);
+    if (escribir_inodo(ninodo,&inodo) == FALLO) return FALLO;
     return leidos;
 }
 
 int mi_stat_f(unsigned int ninodo, struct STAT *p_stat)
 {
     struct inodo inodo;
-    leer_inodo(ninodo, &inodo);
+    if (leer_inodo(ninodo,&inodo) == FALLO) return FALLO;
 
     p_stat->tipo = inodo.tipo;
     p_stat->permisos = inodo.permisos;
@@ -167,22 +173,25 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat)
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos)
 {
     struct inodo inodo;
-    leer_inodo(ninodo,&inodo);
+    if (leer_inodo(ninodo,&inodo) == FALLO) return FALLO;
     //Cambiamos los permisos por los introducidos por parametro
     inodo.permisos=permisos;
     //Actualizamos ctime
     inodo.ctime= time(NULL);
-    escribir_inodo(ninodo,&inodo);
+    if (escribir_inodo(ninodo,&inodo) == FALLO) return FALLO;
     
     return EXITO;
 }
 
+/*****************************************************************************************/
+/*                                       NIVEL 6                                         */
+/*****************************************************************************************/
 
 int mi_truncar_f(unsigned int ninodo,unsigned int nbytes){
     struct inodo inodo;
     int bloques_liberados = 0;
     int primerBL=0;
-    leer_inodo(ninodo,&inodo);
+    if (leer_inodo(ninodo,&inodo) == FALLO) return FALLO;
     // Ver si hay permisos de escritura
     if ((inodo.permisos & 2) != 2) {
         fprintf(stderr, RED "No hay permisos de escritura\n"RESET);
@@ -203,7 +212,7 @@ int mi_truncar_f(unsigned int ninodo,unsigned int nbytes){
     inodo.tamEnBytesLog=nbytes;
     inodo.numBloquesOcupados=inodo.numBloquesOcupados-bloques_liberados;
     //salvar inodo
-    escribir_inodo(ninodo,&inodo);
+    if (escribir_inodo(ninodo,&inodo) == FALLO) return FALLO;
     //devolver la cantidad de bloques liberados
     return bloques_liberados;
 }

@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <string.h>
 #include "ficheros.h"
 
 #define OFFSET1 9000        //BL 8
