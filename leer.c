@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <string.h>
 #include "ficheros.h"
 
 int main(int argc, char **argv){
@@ -15,7 +13,7 @@ int main(int argc, char **argv){
 
     //Leemos el inodo
     struct inodo inodo;
-    leer_inodo(ninodo,&inodo);
+    if(leer_inodo(ninodo,&inodo) == FALLO) return FALLO;
 
     int tambuffer = BLOCKSIZE;
     char buffer_texto[tambuffer];

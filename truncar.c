@@ -5,21 +5,21 @@ int main(int argc, char **argv){
         fprintf(stderr, RED"Sintaxis: ./truncar <nombre_dispositivo> <ninodo> <nbytes>\n"RESET);
         exit(FALLO);
     }
-    bmount(argv[1]);
+    if (bmount(argv[1]) == FALLO) exit(FALLO);
 
     unsigned int ninodo = atoi(argv[2]);
     unsigned int nbytes = atoi(argv[3]);
 
     if(nbytes==0){
-        liberar_inodo(ninodo);
+        if (liberar_inodo(ninodo) == FALLO) exit(FALLO);
     }else{
-        mi_truncar_f(ninodo, nbytes);
+        if (mi_truncar_f(ninodo, nbytes) == FALLO) exit(FALLO);
     }
 
     fprintf(stderr, "DATOS INODO %d:\n", ninodo);
     //Leer inodo e guardar en una variable
     struct inodo inodo;
-    leer_inodo(ninodo, &inodo);
+    if (leer_inodo(ninodo, &inodo) == FALLO) exit(FALLO);
     fprintf(stderr, "tipo=%c\n",inodo.tipo);
     fprintf(stderr, "permisos=%d\n",inodo.permisos);
     fprintf(stderr, "atime: %s",ctime(&inodo.atime));

@@ -32,7 +32,10 @@ int bwrite(unsigned int nbloque, const void *buf){
 
     /*En cada funcion posterior se escribirá por terminal 
     de donde proviene*/
-    if (size != BLOCKSIZE) return FALLO;
+    if (size != BLOCKSIZE) {
+        fprintf(stderr, RED"Error: escribir bloque\n"RESET);
+        return FALLO;
+    }
     
     return size;
 }
@@ -48,7 +51,10 @@ int bread(unsigned int nbloque, void *buf){
 
     /*En cada funcion posterior se escribirá por terminal 
     de donde proviene*/
-    if (size != BLOCKSIZE) return FALLO;
+    if (size != BLOCKSIZE) {
+        fprintf(stderr, RED"Error: leer bloque\n"RESET);
+        return FALLO;
+    }
     
     return size;
 }
