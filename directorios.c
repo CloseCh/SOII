@@ -3,9 +3,9 @@
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
     //Inicial entre las 2 primeras barrasa, final el resto
     //Separar inicial de final y poner que tipo (si acaba en / es directorio, si no fichero)
-    int cont=0;
+    int cont=1;
     int ch='/';
-    char *aux =strchr(camino,ch); //Quitamos la primera barra
+    char *aux =camino+1; //Quitamos la primera barra
     //Mientras no lo encuentre o se salga
     while(camino[cont]!='/' && camino[cont]!='\0'){
         cont++;
@@ -15,7 +15,7 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
     if(camino[cont]=='\0'){
         inicial=aux; //Copiamos camino 
         tipo="f";
-        final='\0';
+        final="";
         return EXITO;
     }
 
@@ -26,7 +26,7 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
         return EXITO;
     }
 
-
+    return FALLO;
 
 }
 
