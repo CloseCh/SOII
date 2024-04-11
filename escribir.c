@@ -1,4 +1,4 @@
-#include "ficheros.h"
+#include "directorios.h"
 
 #define OFFSET1 9000        //BL 8
 #define OFFSET2 209000      //BL 204

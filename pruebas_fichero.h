@@ -1,4 +1,4 @@
-#include "ficheros.h"
+#include "directorios.h"
 
 //Pruebas de cada nivel
 
