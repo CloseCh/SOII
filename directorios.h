@@ -22,17 +22,18 @@ struct entrada {
 /* 
  * Function: extraer_camino
  * ----------------------------
- *  ---
+ *  Dada una cadena de caracteres camino, la separa en inicial y final.
+ *  Donde inicial es hasta la segunda / y final el resto.
  *   
- *  const char *camino: ---
+ *  const char *camino: cadena de caracteres introducida
  *  
- *  char *inicial:---
+ *  char *inicial: Porcion de camino entre las dos primeros /
  * 
- *  char *final:---
+ *  char *final: Cadena camino a partir de la segunda /
  * 
- *  char *tipo: ---
+ *  char *tipo: Marca si la cadena se trata de un directorio "d" o fichero "f"
  *
- *  returns: ---
+ *  returns: EXITO O FALLO
  */
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo);
 
