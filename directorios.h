@@ -41,21 +41,25 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo);
 /* 
  * Function: buscar_entrada
  * ----------------------------
- *  ---
+ *  Esta función nos buscará una determinada entrada (la parte *inicial del *camino_parcial 
+ *  que nos devuelva extraer_camino()) entre las entradas del inodo correspondiente a su 
+ *  directorio padre (identificado con *p_inodo_dir).
  *   
- *  const char *camino_parcial: ---
+ *  const char *camino_parcial: cadena de caracteres
  *  
- *  unsigned int *p_inodo_dir: ---
+ *  unsigned int *p_inodo_dir:  nº de inodo del directorio padre 
  * 
- *  unsigned int *p_inodo: --- 
+ *  unsigned int *p_inodo: El número de inodo al que está asociado el nombre de la entrada buscada. 
  * 
- *  unsigned int *p_entrada: ---
+ *  unsigned int *p_entrada: El número de entrada dentro del inodo *p_inodo_dir que lo contiene 
  * 
- *  char reservar:  ---
+ *  char reservar: reservar=0 (llamadas desde de mi_unlink(), mi_dir(), mi_chmod(), mi_stat(),
+ *  mi_read() y mi_write() de la capa de directorios) como para consultar y crear una entrada 
+ *  de directorio si reservar=1, cuando ésta no exista (llamadas desde mi_creat() y mi_link() de la capa de directorios).
  * 
- *  unsigned char permisos: ---
+ *  unsigned char permisos: permisos de la entrada.
  *
- *  returns: ---
+ *  returns: FALLO o EXITO
  */
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, 
                     unsigned int *p_entrada, char reservar, unsigned char permisos);
