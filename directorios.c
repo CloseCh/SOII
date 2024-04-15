@@ -32,9 +32,100 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
 
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, 
                     unsigned int *p_entrada, char reservar, unsigned char permisos){
+    struct entrada entrada;
+    struct inodo inodo_dir;
+    char inicial[sizeof(entrada.nombre)];
+    char final[strlen(camino_parcial)];
+    char tipo;
+    int cant_entradas_inodo,num_entrada_inodo;
 
-}
+    if(strcmp(camino_parcial,"/")==0){ // si es el directorio raíz
+        struct superbloque SB;
+        bread(posSB, &SB);
+        *p_inodo=SB.posInodoRaiz; //nuestra raíz siempre estará asociada al inodo 0
+        *p_entrada=0;
+        return 0;
+    }
 
+    
+    if(extraer_camino(camino_parcial,inicial,final,&tipo)==FALLO) return ERROR_CAMINO_INCORRECTO;
+
+    //buscamos la entrada cuyo nombre se encuentra en inicial
+    leer_inodo(*p_inodo_dir,&inodo_dir);
+    if ((inodo_dir.permisos & 4) != 4) {
+       fprintf(stderr, RED "No hay permisos de lectura\n"RESET);
+       return ERROR_PERMISO_LECTURA;
+    }
+    //inicializar el buffer de lectura con 0s
+    struct entrada buffer[BLOCKSIZE/sizeof(struct entrada)];
+    memset(buffer,0,BLOCKSIZE); 
+    //calcular cant_entradas_inodo
+    cant_entradas_inodo=inodo_dir.nlinks; // !! COMPROBAR, PUEDE ESTAR MAL
+    num_entrada_inodo=0;
+    if(cant_entradas_inodo>0){
+        //leer entrada
+        mi_read_f(*p_inodo_dir,buffer,num_entrada_inodo,sizeof(entrada));
+        while((num_entrada_inodo<cant_entradas_inodo)&&(inicial!=entrada.nombre)){
+            num_entrada_inodo++;
+            //inicializar el buffer de lectura con 0s
+            memset(buffer,0,sizeof(struct entrada));
+            //leer siguiente entrada
+            mi_read_f(*p_inodo_dir,buffer,num_entrada_inodo,sizeof(entrada));
+        }
+    }
+
+    if((inicial!=entrada.nombre)&&(num_entrada_inodo==cant_entradas_inodo)){
+        //la entrada no existe
+        switch (reservar)
+        {
+        case 0: // modo consulta. Como no existe retornamos error
+            return ERROR_NO_EXISTE_ENTRADA_CONSULTA;
+            break;
+        case 1: // creamos la entrada en el directorio referenciado por *p_inodo_dir
+            if(inodo_dir.tipo=='f'){ // si es fichero no permite escritura
+                return ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO;
+            }
+            if((inodo_dir.permisos & 2) != 2){ //si es directorio comprobar que tiene permiso de escritura
+                fprintf(stderr, RED "No hay permisos de escritura\n"RESET);
+                return ERROR_PERMISO_ESCRITURA;
+            }else{
+                //copiar *inicial en el nombre de la entrada
+                strcpy(entrada.nombre,inicial);
+                if(tipo=='d'){
+                    if(strcmp(final,"/")==0){
+                        entrada.ninodo=reservar_inodo('d',permisos);
+                    }else{ // no es el final de la ruta
+                        return ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO;
+                    }
+                }else{ // es un fichero
+                    entrada.ninodo=reservar_inodo('f',permisos);
+                }
+        
+                if( escribir_inodo(p_entrada,p_inodo_dir)==FALLO){ // es girado?
+                    if(entrada.ninodo!=-1){
+                        liberar_inodo(p_entrada);
+                    }
+                    return FALLO;
+                }
+            }
+        }
+    }
+
+    if((strcmp(final,"/")==0)||(strcmp(final,"")==0)){ // hemos llegado al final del camino, se refiere a esto??
+        if((num_entrada_inodo<cant_entradas_inodo)&&(reservar==1)){
+            //modo escritura y la entrada ya existe
+            return ERROR_ENTRADA_YA_EXISTENTE;
+        }
+        //cortamos la recusividad
+         *p_inodo=entrada.ninodo;
+         *p_entrada=num_entrada_inodo;
+        return EXITO;
+    }else{
+        *p_inodo_dir=*p_entrada; // se refiere a esto?
+        return buscar_entrada (final, p_inodo_dir, p_inodo, p_entrada, reservar, permisos);
+    }
+    return EXITO;
+                    }
 
 
 void mostrar_error_buscar_entrada(int error) {
