@@ -65,3 +65,62 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     unsigned int *p_entrada, char reservar, unsigned char permisos);
 
 void mostrar_error_buscar_entrada(int error);
+
+
+/*****************************************************************************************/
+/*                                       NIVEL 7                                         */
+/*****************************************************************************************/
+
+/* 
+ * Function: mi_creat
+ * ----------------------------
+ *  ---
+ *  
+ *  const char *camino: ---
+ * 
+ *  unsigned char permisos: ---
+ *
+ *  returns: FALLO o EXITO
+ */
+int mi_creat(const char *camino, unsigned char permisos);
+
+
+/* 
+ * Function: mi_dir
+ * ----------------------------
+ *  ---
+ *  
+ *  const char *camino: ---
+ * 
+ *  char *buffer:---
+ *
+ *  returns: ---
+ */
+int mi_dir(const char *camino, char *buffer);
+
+
+/* 
+ * Function: mi_chmod
+ * ----------------------------
+ *  ---
+ *  
+ *  const char *camino: ---
+ * 
+ *  unsigned char permisos: ---
+ *
+ *  returns: ---
+ */
+int mi_chmod(const char *camino, unsigned char permisos);
+
+/* 
+ * Function: mi_stta
+ * ----------------------------
+ *  ---
+ *  
+ *  const char *camino: ---
+ * 
+ *  struct STAT *p_stat: ---
+ *
+ *  returns: ---
+ */
+ int mi_stta(const char *camino, struct STAT *p_stat);
