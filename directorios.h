@@ -88,13 +88,14 @@ int mi_creat(const char *camino, unsigned char permisos);
 /* 
  * Function: mi_dir
  * ----------------------------
- *  ---
+ *  Función de la capa de directorios que pone el contenido del directorio en un buffer de memoria
+ *  (el nombre de cada entrada puede venir separado por '|' o por un tabulador)
  *  
- *  const char *camino: ---
+ *  const char *camino: camino del directorio o fichero.
  * 
- *  char *buffer:---
+ *  char *buffer: buffer donde se pone el contenido del directorio
  *
- *  returns: ---
+ *  returns: el número de entradas
  */
 int mi_dir(const char *camino, char *buffer);
 
@@ -113,14 +114,15 @@ int mi_dir(const char *camino, char *buffer);
 int mi_chmod(const char *camino, unsigned char permisos);
 
 /* 
- * Function: mi_stta
+ * Function: mi_stat
  * ----------------------------
- *  ---
- *  
- *  const char *camino: ---
+ *  Buscar la entrada *camino con buscar_entrada() para obtener el p_inodo.
+ *  Si la entrada existe llamamos a la función mi_stat_f() de ficheros.c pasándole el p_inodo: 
  * 
- *  struct STAT *p_stat: ---
+ *  const char *camino: camino a buscar
+ * 
+ *  struct STAT *p_stat: puntero a estructura que contiene información del fichero o directorio
  *
- *  returns: ---
+ *  returns: FALLO O EXITO
  */
- int mi_stta(const char *camino, struct STAT *p_stat);
+ int mi_stat(const char *camino, struct STAT *p_stat);
