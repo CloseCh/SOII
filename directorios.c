@@ -125,7 +125,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         return buscar_entrada (final, p_inodo_dir, p_inodo, p_entrada, reservar, permisos);
     }
     return EXITO;
-                    }
+             }
+
 
 
 void mostrar_error_buscar_entrada(int error) {
@@ -139,6 +140,13 @@ void mostrar_error_buscar_entrada(int error) {
         case -7: fprintf(stderr, "Error: El archivo ya existe.\n"); break;
         case -8: fprintf(stderr, "Error: No es un directorio.\n"); break;
     }
+}
+
+int mi_creat(const char *camino, unsigned char permisos){
+    unsigned int *p_inodo;
+    unsigned int *p_entrada;
+
+    buscar_entrada(camino,0,p_inodo,p_entrada,1,permisos);
 }
 
 int mi_dir(const char *camino, char *buffer){
@@ -157,6 +165,22 @@ int mi_dir(const char *camino, char *buffer){
     //CONTINUARÁ
 
 }
+
+int mi_chmod(const char *camino, unsigned char permisos){
+
+    unsigned int *p_inodo;
+    unsigned int *p_entrada;
+
+    p_inodo=buscar_entrada(camino,0,p_inodo,p_entrada,1,permisos);
+    //Si existe la entrada
+    if(p_inodo==EXITO){
+        mi_chmod_f(p_inodo,permisos);
+        return  EXITO;
+    }
+    return  FALLO;
+
+}
+
 int mi_stat(const char *camino, struct STAT *p_stat){
 
      unsigned int *p_inodo;
