@@ -74,11 +74,11 @@ void mostrar_error_buscar_entrada(int error);
 /* 
  * Function: mi_creat
  * ----------------------------
- *  ---
+ *  Función de la capa de directorios que crea un fichero/directorio y su entrada de directorio.
  *  
- *  const char *camino: ---
+ *  const char *camino: Ruta donde se creara el fichero/directorio
  * 
- *  unsigned char permisos: ---
+ *  unsigned char permisos: Permisos de lectura/escritura
  *
  *  returns: FALLO o EXITO
  */
@@ -105,9 +105,9 @@ int mi_dir(const char *camino, char *buffer);
  * ----------------------------
  *  ---
  *  
- *  const char *camino: ---
+ *  const char *camino: Ruta donde se creara el fichero/directorio
  * 
- *  unsigned char permisos: ---
+ *  unsigned char permisos: Permisos de lectura/escritura
  *
  *  returns: ---
  */
