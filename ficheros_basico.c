@@ -683,14 +683,38 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                         if (memcmp(bloques_punteros[0], bufAux_punteros, BLOCKSIZE) == 0){
                             while(nBL < INDIRECTOS1-1 && bloques_punteros[1][bloques] == 0){
                                 bloques++;
-                                nBL+= (INDIRECTOS0-DIRECTOS);
+                                nBL+= NPUNTEROS;
                             }
                         }
                         if (nBL == oldBL){
-                            while(bloques < (INDIRECTOS0-DIRECTOS) && bloques_punteros[0][bloques] == 0){
+                            while(bloques < NPUNTEROS && bloques_punteros[0][bloques] == 0){
                                 bloques++;
                                 nBL++;
                             }
+                        }
+                    }
+                    
+                } else if (nRangoBL == 3){
+
+                    if (memcmp(bloques_punteros[0], bufAux_punteros, BLOCKSIZE) == 0 &&
+                            memcmp(bloques_punteros[1], bufAux_punteros, BLOCKSIZE) == 0){
+                        while(nBL < ultimoBL && bloques_punteros[2][bloques] == 0){
+                            bloques++;
+                            nBL+= NPUNTEROS*NPUNTEROS;
+                        }
+                    }
+
+                    if (memcmp(bloques_punteros[0], bufAux_punteros, BLOCKSIZE) == 0 && nBL == oldBL){
+                        while(nBL < ultimoBL && bloques_punteros[1][bloques] == 0){
+                            bloques++;
+                            nBL+= NPUNTEROS;
+                        }
+                    }
+
+                    if (nBL == oldBL){
+                        while(bloques < NPUNTEROS && bloques_punteros[0][bloques] == 0){
+                            bloques++;
+                            nBL++;
                         }
                     }
                     
