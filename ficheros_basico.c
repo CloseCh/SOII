@@ -571,7 +571,7 @@ int liberar_inodo(unsigned int ninodo){
 
 int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
     unsigned int nivel_punteros,indice,ptr=0,nBL,ultimoBL; 
-    int nRangoBL;
+    int nRangoBL,bwriteCounter = 0,breadCounter = 0;
     unsigned int bloques_punteros[3][NPUNTEROS]; //array de bloques de punteros
     unsigned int bufAux_punteros[NPUNTEROS]; // para llenar de 0s y comparar
     int ptr_nivel[3]; //punteros a bloques de punteros de cada nivel
@@ -591,6 +591,7 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
 
     memset(bufAux_punteros,0,BLOCKSIZE);
 
+    fprintf(stderr, CYAN NEGRITA"[liberar_bloques_inodo()→ primer BL: %d, último BL: %d]\n"RESET, primerBL, ultimoBL);
     for (nBL=primerBL;nBL<=ultimoBL;nBL++){ // ¿¿ <= o < ?? recorrido BLs
         nRangoBL=obtener_nRangoBL(inodo,nBL,&ptr);  //0:D, 1:I0, 2:I1, 3:I2
         if(nRangoBL<0) return FALLO;
@@ -602,6 +603,7 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
             if(indice==0 || nBL==primerBL){
                 //solo hay que leer del dispositivo si no está ya cargado previamente en un buffer
                 if (bread(ptr,bloques_punteros[nivel_punteros-1]) == FALLO) return FALLO;
+                breadCounter++;
             }
             ptr_nivel[nivel_punteros-1]=ptr;
             indices[nivel_punteros-1]=indice;
@@ -613,6 +615,7 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
             if(liberar_bloque(ptr) == FALLO) return FALLO;
 
             fprintf(stderr, GRAY"[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n"RESET, ptr, nBL);
+            fflush(stderr);
             liberados++;
             if(nRangoBL==0){
                 inodo->punterosDirectos[nBL]=0;
@@ -625,10 +628,25 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                     if(memcmp(bloques_punteros[nivel_punteros-1],bufAux_punteros,BLOCKSIZE)==0){
                         if(liberar_bloque(ptr) == FALLO) return FALLO;
                         fprintf(stderr, GRAY"[liberar_bloques_inodo()→ liberado BF %d de punteros_nivel%d correspondiente al BL %d]\n"RESET, ptr, nivel_punteros ,nBL);
+                        fflush(stderr);
                         liberados++;
+
                         //incluir mejora 1
-                        //unsigned int oldBL = nBL;
-                        //while ()
+                        int nRango = 1,cpynRangoBL = nRangoBL;
+                        if(cpynRangoBL == 3) cpynRangoBL--;
+                        while(nivel_punteros == cpynRangoBL && cpynRangoBL >= nRango && nBL != ultimoBL){
+                            unsigned int oldBL = nBL;
+
+                            int pos = obtener_indice(nBL,nRango);
+
+                            if(nRango == 1) nBL += INDIRECTOS0 - DIRECTOS - pos - 1;
+                            if(nRango == 2) nBL += (NPUNTEROS - pos-1)*NPUNTEROS;
+                                
+                            if (nBL != oldBL)
+                                fprintf(stderr, GREEN"[liberar_bloques_inodo()→ Del BL %d saltamos hasta BL %d]\n"RESET,oldBL,nBL);
+                            oldBL = nBL;
+                            nRango++;
+                        }
 
                         if(nivel_punteros==nRangoBL){
                             inodo->punterosIndirectos[nRangoBL-1]=0;
@@ -636,47 +654,61 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                         nivel_punteros++;
                     }else{
                         if(bwrite(ptr,bloques_punteros[nivel_punteros-1]) == FALLO) return FALLO;
+                        bwriteCounter++;
                         nivel_punteros=nRangoBL+1;
                     }
                 }
             }
 
-        }/*else{
-            
-            // No salta bien los indirectos 2 y 3
-            if (ptr==0 && nivel_punteros > 0){
+        }else{
+            //incluir mejora 2
+            if (nRangoBL > 0){
                 unsigned int oldBL = nBL;
-                int nSaltar = 0;
-                int comparaciones = 0;
+                int bloques = 0;
 
-                //Para indirectos 1
-                comparaciones = memcmp(bloques_punteros[0], bufAux_punteros, sizeof(bufAux_punteros));
-                if (nRangoBL == 2 && comparaciones == 0){
+                if (nRangoBL == 1){
+                    //+1 para que no sobrepase el bloque = 0
+                    if (memcmp(bloques_punteros[0], bufAux_punteros, BLOCKSIZE) == 0) nBL += INDIRECTOS0-nBL;
 
-                    comparaciones = memcmp(bloques_punteros[1], bufAux_punteros, sizeof(bufAux_punteros));
-                    if (comparaciones == 0){
-                        nSaltar = INDIRECTOS1 - (nBL % INDIRECTOS1) - 1;
-                        nBL += nSaltar; 
-                    } else {
-                        nSaltar = INDIRECTOS0 - (nBL % INDIRECTOS0) - 1;
-                        nBL += nSaltar;
+                    //Ver de 1 en 1 aver si son 0 sin superar INDIRECTOS0
+                    while(nBL < INDIRECTOS0 && bloques_punteros[0][bloques] == 0){
+                        bloques++;
+                        nBL++;
                     }
-                    fprintf(stderr, GREEN"[liberar_bloques_inodo()→ Del BL %d saltamos hasta BL %d]\n"RESET,oldBL,nBL);
-                }
-                
-                //Para indirectos 0
-                else if (nRangoBL == 1 && comparaciones == 0){
-                    nSaltar = INDIRECTOS0 - (nBL % INDIRECTOS0) - 1;
-                    nBL += nSaltar;
-                    fprintf(stderr, GREEN"[liberar_bloques_inodo()→ Del BL %d saltamos hasta BL %d]\n"RESET,oldBL,nBL);
+
+                } else if (nRangoBL == 2){
+                    if (memcmp(bloques_punteros[1], bufAux_punteros, BLOCKSIZE) == 0) {
+                        nBL += INDIRECTOS1-nBL-1;
+                    } else {
+                        if (memcmp(bloques_punteros[0], bufAux_punteros, BLOCKSIZE) == 0){
+                            while(nBL < INDIRECTOS1-1 && bloques_punteros[1][bloques] == 0){
+                                bloques++;
+                                nBL+= (INDIRECTOS0-DIRECTOS);
+                            }
+                        }
+                        if (nBL == oldBL){
+                            while(bloques < (INDIRECTOS0-DIRECTOS) && bloques_punteros[0][bloques] == 0){
+                                bloques++;
+                                nBL++;
+                            }
+                        }
+                    }
+                    
                 }
 
-                
-                
+                //Decrementar ya que se sobrepasa 1 posicion
+                if (oldBL != nBL) {
+                    nBL--;
+                    fprintf(stderr, CYAN"[liberar_bloques_inodo()→ Del BL %d saltamos hasta BL %d]\n"RESET,oldBL,nBL);
+                }
             }
-        }*/
+        }
     }
 
+
+    fprintf(stderr, CYAN NEGRITA
+        "[liberar_bloques_inodo()→ total bloques liberados: %d, total_breads: %d, total_bwrites: %d]\n"RESET,
+            liberados,breadCounter,bwriteCounter);
     return liberados;
 
 }
