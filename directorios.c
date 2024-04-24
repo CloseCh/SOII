@@ -121,7 +121,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
          *p_entrada=num_entrada_inodo;
         return EXITO;
     }else{
-        *p_inodo_dir=p_entrada; // se refiere a esto?
+        *p_inodo_dir=p_inodo; // se refiere a esto?
         return buscar_entrada (final, p_inodo_dir, p_inodo, p_entrada, reservar, permisos);
     }
     return EXITO;
@@ -151,18 +151,43 @@ int mi_creat(const char *camino, unsigned char permisos){
 
 int mi_dir(const char *camino, char *buffer){
     struct inodo inodo;
-    unsigned int *p_inodo;
+    struct entrada entrada;
+
+    struct superbloque SB;
+    bread(posSB, &SB);
+
+    unsigned int p_inodo_dir=SB.posInodoRaiz;
+    unsigned int p_inodo;
     unsigned int *p_entrada;
+    unsigned int cant_entradas_inodo;
+    int num_entrada_inodo;
 
-    buscar_entrada(camino,1,p_inodo,p_entrada,0,6/*no se que poner*/);
-    leer_inodo(*p_inodo,&inodo);
+    char inicial[sizeof(entrada.nombre)];
+    char final[strlen(camino)];
 
-    if(inodo.tipo !='d') return FALLO;
-    if((inodo.permisos & 4) != 4) {
-       fprintf(stderr, RED "No hay permisos de lectura\n"RESET);
-       return ERROR_PERMISO_LECTURA;
+    int num_entradas = 0; // Contador de entradas
+
+    buscar_entrada(camino,&p_inodo_dir,&p_inodo,p_entrada,0,4);
+    leer_inodo(&p_inodo,&inodo);
+    int offset=(*p_entrada)*sizeof(entrada);
+    // A CONTINUACIÓN SE LEE UNA ENTRADA?
+    mi_read_f(&p_inodo,buffer,offset,sizeof(struct entrada));
+    
+
+    if ((inodo.tipo != 'd') || ((inodo.permisos & 4) != 4)) {
+        fprintf(stderr, RED "Tipo de archivo no válido\n" RESET);
+        return FALLO;
     }
-    //CONTINUARÁ
+    if (inodo.permisos & 4) strcat(buffer, "r"); else strcat(buffer, "-");
+    if (inodo.permisos & 2) strcat(buffer, "w"); else strcat(buffer, "-");
+    if (inodo.permisos & 1) strcat(buffer, "x"); else strcat(buffer, "-");
+
+    struct tm *tm; //ver info: struct tm
+    tm = localtime(&inodo.mtime);
+    sprintf(tm, "%d-%02d-%02d %02d:%02d:%02d", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min,  tm->tm_sec);
+    strcat(buffer, tm);
+
+    
 
 }
 
@@ -185,8 +210,11 @@ int mi_stat(const char *camino, struct STAT *p_stat){
 
      unsigned int *p_inodo;
      unsigned int *p_entrada;
+
+     struct superbloque SB;
+     bread(posSB, &SB);
      
-    if(buscar_entrada(camino,1,p_inodo,p_entrada,0,p_stat->permisos)==EXITO){
+    if(buscar_entrada(camino,SB.posInodoRaiz,p_inodo,p_entrada,0,p_stat->permisos)==EXITO){
         mi_stat_f(p_inodo,p_stat);
        
         printf ("Nº de inodo: %d\n", *p_inodo);
