@@ -36,18 +36,11 @@
 
 //Debuging de cada nivel
 
-/*
-#define DEBUGN3     0
-#define DEBUGN4     0
-#define DEBUGN5     0
+
+#define DEBUGN3     1
+#define DEBUGN4     1
 #define DEBUGN6     0
-#define DEBUGN7     0
-#define DEBUGN8     0
-#define DEBUGN9     0
-#define DEBUGN10    0
-#define DEBUGN11    0
-#define DEBUGN12    0
-*/
+
 
 /*
  * Function: bmount

@@ -203,10 +203,11 @@ char leer_bit(unsigned int nbloque){
     mascara &= bufferMB[posbyteA]; // operador AND para bits
     mascara >>= (7-posbit); // desplazamiento de bits a la derecha
 
-    fprintf(stderr, GRAY
-        "[leer_bit(%d)→ posbyte:%d, posbyte (ajustado): %d, posbit:%d, nbloqueMB:%d, nbloqueabs:%d)]\n" RESET,
-        nbloque, posbyte, posbyteA, posbit, nbloqueMB, nbloqueabs);
-
+    #if DEBUGN3
+        fprintf(stderr, GRAY
+            "[leer_bit(%d)→ posbyte:%d, posbyte (ajustado): %d, posbit:%d, nbloqueMB:%d, nbloqueabs:%d)]\n" RESET,
+            nbloque, posbyte, posbyteA, posbit, nbloqueMB, nbloqueabs);
+    #endif
     return mascara;
 }
 
@@ -605,9 +606,9 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
 
     memset(bufAux_punteros,0,BLOCKSIZE);
 
-
-    fprintf(stderr, CYAN NEGRITA"[liberar_bloques_inodo()→ primer BL: %d, último BL: %d]\n"RESET, primerBL, ultimoBL);
-    
+    #if DEBUGN6
+        fprintf(stderr, CYAN NEGRITA"[liberar_bloques_inodo()→ primer BL: %d, último BL: %d]\n"RESET, primerBL, ultimoBL);
+    #endif
     for (nBL=primerBL;nBL<=ultimoBL;nBL++){
         nRangoBL=obtener_nRangoBL(inodo,nBL,&ptr);  //0:D, 1:I0, 2:I1, 3:I2
         if(nRangoBL<0) return FALLO;
@@ -628,8 +629,10 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
 
         if (ptr > 0){
             if(liberar_bloque(ptr) == FALLO) return FALLO;
-            fprintf(stderr, GRAY"[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n"RESET, ptr, nBL);
-            fflush(stderr);
+            #if DEBUGN6
+                fprintf(stderr, GRAY"[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n"RESET, ptr, nBL);
+                fflush(stderr);
+            #endif
             liberados++;
             if(nRangoBL==0){
                 inodo->punterosDirectos[nBL]=0;
@@ -656,8 +659,10 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                     ptr=ptr_nivel[nivel_punteros-1];
                     if(memcmp(bloques_punteros[nivel_punteros-1],bufAux_punteros,BLOCKSIZE)==0){
                         if(liberar_bloque(ptr) == FALLO) return FALLO;
-                        fprintf(stderr, GRAY"[liberar_bloques_inodo()→ liberado BF %d de punteros_nivel%d correspondiente al BL %d]\n"RESET, ptr, nivel_punteros ,nBL);
-                        fflush(stderr);
+                        #if DEBUGN6
+                            fprintf(stderr, GRAY"[liberar_bloques_inodo()→ liberado BF %d de punteros_nivel%d correspondiente al BL %d]\n"RESET, ptr, nivel_punteros ,nBL);
+                            fflush(stderr);
+                        #endif
                         liberados++;
 
                         //incluir mejora 1
@@ -677,7 +682,9 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                             if(iterador == 2) nBL += (NPUNTEROS - pos-1)*NPUNTEROS;
                                 
                             if (nBL != oldBL){
-                                fprintf(stderr, GREEN"[liberar_bloques_inodo()→ Del BL %d saltamos hasta BL %d]\n"RESET,oldBL,nBL);
+                                #if DEBUGN6
+                                    fprintf(stderr, GREEN"[liberar_bloques_inodo()→ Del BL %d saltamos hasta BL %d]\n"RESET,oldBL,nBL);
+                                #endif
                                 saltado = 1;
                             }
                                 
@@ -697,7 +704,9 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                                 // hemos de salir del bucle ya que no será necesario liberar los bloques de niveles
                                 // superiores de los que cuelga si no está vacio
                                 if(bwrite(ptr,bloques_punteros[iterador-1]) == FALLO) return FALLO;
-                                fprintf(stderr, RED"[liberar_bloques_inodo()→ salvado BF %d de punteros_nivel%d correspondiente al BL %d]\n"RESET, ptr, nivel_punteros ,nBL);
+                                #if DEBUGN6
+                                    fprintf(stderr, RED"[liberar_bloques_inodo()→ salvado BF %d de punteros_nivel%d correspondiente al BL %d]\n"RESET, ptr, nivel_punteros ,nBL);
+                                #endif
                                 bwriteCounter++;
                                 break;
                             }
@@ -767,16 +776,20 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                 //Decrementar ya que se sobrepasa 1 posicion siempre
                 if (oldBL != nBL) {
                     nBL--;
-                    fprintf(stderr, CYAN"[liberar_bloques_inodo()→ Del BL %d saltamos hasta BL %d]\n"RESET,oldBL,nBL);
+                    #if DEBUGN6
+                        fprintf(stderr, CYAN"[liberar_bloques_inodo()→ Del BL %d saltamos hasta BL %d]\n"RESET,oldBL,nBL);
+                    #endif
                 }
             }
         }
     }
 
-    //Ensenyar liberados, bread y bwrite contados.
-    fprintf(stderr, CYAN NEGRITA
-        "[liberar_bloques_inodo()→ total bloques liberados: %d, total_breads: %d, total_bwrites: %d]\n"RESET,
-            liberados,breadCounter,bwriteCounter);
-    return liberados;
+    #if DEBUGN6
+        //Ensenyar liberados, bread y bwrite contados.
+        fprintf(stderr, CYAN NEGRITA
+            "[liberar_bloques_inodo()→ total bloques liberados: %d, total_breads: %d, total_bwrites: %d]\n"RESET,
+                liberados,breadCounter,bwriteCounter);
+    #endif
 
+    return liberados;
 }
