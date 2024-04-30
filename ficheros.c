@@ -17,15 +17,15 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     unsigned int bytes_escritos = 0;
 
     // Determinar de qué bloque a qué bloque lógico hay que escribir
-    int primerBL = offset / BLOCKSIZE;
-    int ulitmoBL = (offset + nbytes - 1) / BLOCKSIZE;
+    unsigned int primerBL = offset / BLOCKSIZE;
+    unsigned int ulitmoBL = (offset + nbytes - 1) / BLOCKSIZE;
 
     // Determinar los desplazamientos dentro de esos bloques donde cae el offset, y los nbytes escritos a partir del offset
-    int desp1 = offset % BLOCKSIZE;
-    int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
+    unsigned int desp1 = offset % BLOCKSIZE;
+    unsigned int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
 
     // obtener el nº de bloque físico
-    int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 1);
+    unsigned int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 1);
     if (nbfisico == FALLO) return FALLO;
 
     // leer bloque físico y almacenar en un array
@@ -90,7 +90,8 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
        return FALLO;
     }
 
-    int leidos = 0;
+    unsigned int leidos = 0;
+    //Comprobaciones
     if (offset >= inodo.tamEnBytesLog)
         return leidos;
     
@@ -98,51 +99,90 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         //Leemos solo los bytes desde el offset hasta EOF
         nbytes = inodo.tamEnBytesLog-offset;
     
+    //Esto es utilizado para leer un bloque de datos
     unsigned char buf_bloque[BLOCKSIZE];
-    //memset(buf_bloque, 0, nbytes);
 
-    int primerBL = offset / BLOCKSIZE;
-    int ulitmoBL = (offset + nbytes - 1) / BLOCKSIZE;
+    unsigned int primerBL = offset / BLOCKSIZE;
+    unsigned int ulitmoBL = (offset + nbytes - 1) / BLOCKSIZE;
+    unsigned int desp1 = offset % BLOCKSIZE;
+    unsigned int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
+
     //En traducir reservar=0, por lo que puede retornar -1
-    int desp1 = offset % BLOCKSIZE;
-    int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
     unsigned int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 0);
+
+    
 
     //Mismos casos que mi_write, en vez de escribir lee
     if(primerBL == ulitmoBL){
         if (nbfisico != -1) {
             if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-            memcpy(buf_original, buf_bloque, nbytes);
-            leidos += nbytes;
-        } else leidos += nbytes;
-
+            memcpy(buf_original, buf_bloque + desp1, nbytes);// se ha tenido en cuenta para nbytes < BLOCKSIZE
+        }
+        leidos += nbytes;
     // caso2: hay que escribir en más de un bloque
     } else { 
-        // FASE 1: PRIMER BLOQUE LÓGICO
-        if (nbfisico != -1) {
-            if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-            memcpy(buf_original, buf_bloque, nbytes - 1);
-        }
-        // Acumular bytes escritos.
-        leidos += nbytes;
-        // FASE 2: BLOQUES LÓGICOS INTERMEDIOS
-        for (int bl = primerBL+1; bl < ulitmoBL; bl++){
-            nbfisico = traducir_bloque_inodo(&inodo, bl, 0);
-            if (nbfisico != -1) {
-                if (bread(nbfisico, buf_original + (BLOCKSIZE - desp1) + (bl - primerBL - 1) * BLOCKSIZE) == FALLO) return FALLO;
-                memcpy(buf_original, buf_bloque + desp1, nbytes);
+        //Variables adicionales
+        /* Utilizado para comparar con el blocksize en caso 2.1
+        Ya que es posible que al calcular con el desplazamiento 
+        se sobrepase el BLOCKSIZE */
+        unsigned int bytesUpper = 0; 
+
+        // caso2.1: nbytes < BLOCKSIZE
+        // caso2.2: nbytes > BLOCKSIZE
+        // caso2.3: nbytes = BLOCKSIZE
+
+        /* En este caso solo hay que hacer 2 read, si entra seguro 
+        que hay dos bloques que leer */
+        if (nbytes <= BLOCKSIZE){
+            //Obtenemos el BLOCKSIZE + lo que sobrepasa de bytes
+            bytesUpper = offset % BLOCKSIZE + nbytes;
+            if (nbfisico != -1){
+                if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+                memcpy(buf_original,buf_bloque + desp1, BLOCKSIZE - desp1); // Guardamos una parte
+            }
+            leidos += BLOCKSIZE - desp1;
+
+            bytesUpper -= BLOCKSIZE;//Asi obtenemos los bytes que sobrepasa
+
+            nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 0);
+            if (nbfisico != -1){
+                if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+                memcpy(buf_original, buf_bloque, bytesUpper); // Guardamos la segunda parte
+            }
+            leidos += bytesUpper;
+
+        /* En este caso solo entra en este codigo*/
+        } else if (nbytes > BLOCKSIZE){
+
+            // Fase 1: leemos el primer bloque teniendo en cuenta el desplazamiento
+            if (nbfisico != -1){
+                if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+                memcpy(buf_original,buf_bloque + desp1, BLOCKSIZE - desp1); // Guardamos una parte
+            }
+            leidos += BLOCKSIZE - desp1;
+
+            // Fase 2: Un bucle hasta llegar a un bloque menor que nbytes
+            for (int bl = primerBL+1; bl < ulitmoBL; bl++){
+                nbfisico = traducir_bloque_inodo(&inodo, bl, 0);
+                if (nbfisico != -1){
+                    if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+                    memcpy(buf_original + leidos ,buf_bloque, BLOCKSIZE); // Guardamos una parte
+                }
+                // Acumular bytes escritos
                 leidos += BLOCKSIZE;
-            } else leidos += BLOCKSIZE;
-            // Acumular bytes escritos
+            }
+
+            // Fase 3: Ultimo bloque, tener en cuenta el desp2
+            nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 0);
+            if (nbfisico != -1){
+                if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+                memcpy(buf_original,buf_bloque, desp2); // Guardamos una parte
+            }
+            leidos += desp2 + 1;
+
         }
-        // FASE 3:ÚLTIMO BLOQUE LÓGICO
-        nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 0);
-        if (nbfisico != -1) {
-            if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-            memcpy(buf_bloque, buf_original + (nbytes - (desp2 + 1)), desp2 + 1);
-        } else leidos += BLOCKSIZE;
-        // Acumular bytes escritos
-        leidos += (desp2+1);
+
+        
     }
     //Actualizamos atime
     inodo.atime = time(NULL);
