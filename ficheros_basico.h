@@ -11,8 +11,6 @@
 #define INDIRECTOS1 (NPUNTEROS * NPUNTEROS + INDIRECTOS0)    // 65.804
 #define INDIRECTOS2 (NPUNTEROS * NPUNTEROS * NPUNTEROS + INDIRECTOS1) // 16.843.020
 
-#define DEBUGN4 1
-
 struct superbloque {
     unsigned int posPrimerBloqueMB;          // Posición absoluta del primer bloque del mapa de bits
     unsigned int posUltimoBloqueMB;          // Posición absoluta del último bloque del mapa de bits

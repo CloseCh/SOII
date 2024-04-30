@@ -13,6 +13,10 @@ struct STAT {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
     unsigned int numBloquesOcupados; // Cantidad de bloques ocupados zona de datos+
 };
 
+/*****************************************************************************************/
+/*                                       NIVEL 5                                         */
+/*****************************************************************************************/
+
 /*
  * Function: mi_write_f
  * ----------------------------
