@@ -181,64 +181,64 @@ void mostrar_error_buscar_entrada(int error) {
     }
 }
 
-//int mi_creat(const char *camino, unsigned char permisos){
-//    unsigned int *p_inodo;
-//    unsigned int *p_entrada;
-//
-//    buscar_entrada(camino,0,p_inodo,p_entrada,1,permisos);
-//}
-//
-//int mi_dir(const char *camino, char *buffer){
-//    struct inodo inodo;
-//    unsigned int *p_inodo;
-//    unsigned int *p_entrada;
-//
-//    buscar_entrada(camino,1,p_inodo,p_entrada,0,6/*no se que poner*/);
-//    leer_inodo(*p_inodo,&inodo);
-//
-//    if(inodo.tipo !='d') return FALLO;
-//    if((inodo.permisos & 4) != 4) {
-//       fprintf(stderr, RED "No hay permisos de lectura\n"RESET);
-//       return ERROR_PERMISO_LECTURA;
-//    }
-//    //CONTINUARÁ
-//
-//}
-//
-//int mi_chmod(const char *camino, unsigned char permisos){
-//
-//    unsigned int *p_inodo;
-//    unsigned int *p_entrada;
-//
-//    p_inodo=buscar_entrada(camino,0,p_inodo,p_entrada,1,permisos);
-//    //Si existe la entrada
-//    if(p_inodo==EXITO){
-//        mi_chmod_f(p_inodo,permisos);
-//        return  EXITO;
-//    }
-//    return  FALLO;
-//
-//}
-//
-//int mi_stat(const char *camino, struct STAT *p_stat){
-//
-//     unsigned int *p_inodo;
-//     unsigned int *p_entrada;
-//     
-//    if(buscar_entrada(camino,1,p_inodo,p_entrada,0,p_stat->permisos)==EXITO){
-//        mi_stat_f(p_inodo,p_stat);
-//       
-//        printf ("Nº de inodo: %d\n", *p_inodo);
-//        printf ("tipo: %c\n", p_stat->tipo);
-//        printf ("permisos: %c\n", p_stat->permisos);
-//        printf ("atime: %s\n", p_stat->atime);
-//        printf ("ctime: %s\n", p_stat->ctime);
-//        printf ("mtime: %s\n", p_stat->mtime);
-//        printf ("nlinks: %s\n", p_stat->nlinks);
-//        printf ("tamEnBytesLog: %d\n", p_stat->tamEnBytesLog);
-//        printf ("numBloquesOcupados: %d\n", p_stat->numBloquesOcupados);
-//        return EXITO;
-//
-//    }
-//    return FALLO;
-//}
+int mi_creat(const char *camino, unsigned char permisos){
+    unsigned int *p_inodo;
+    unsigned int *p_entrada;
+
+    buscar_entrada(camino,0,p_inodo,p_entrada,1,permisos);
+}
+
+int mi_dir(const char *camino, char *buffer){
+    struct inodo inodo;
+    unsigned int *p_inodo;
+    unsigned int *p_entrada;
+
+    buscar_entrada(camino,1,p_inodo,p_entrada,0,6/*no se que poner*/);
+    leer_inodo(*p_inodo,&inodo);
+
+    if(inodo.tipo !='d') return FALLO;
+    if((inodo.permisos & 4) != 4) {
+       fprintf(stderr, RED "No hay permisos de lectura\n"RESET);
+       return ERROR_PERMISO_LECTURA;
+    }
+    //CONTINUARÁ
+
+}
+
+int mi_chmod(const char *camino, unsigned char permisos){
+
+    unsigned int *p_inodo;
+    unsigned int *p_entrada;
+
+    p_inodo=buscar_entrada(camino,0,p_inodo,p_entrada,1,permisos);
+    //Si existe la entrada
+    if(p_inodo==EXITO){
+        mi_chmod_f(p_inodo,permisos);
+        return  EXITO;
+    }
+    return  FALLO;
+
+}
+
+int mi_stat(const char *camino, struct STAT *p_stat){
+
+     unsigned int *p_inodo;
+     unsigned int *p_entrada;
+     
+    if(buscar_entrada(camino,1,p_inodo,p_entrada,0,p_stat->permisos)==EXITO){
+        mi_stat_f(p_inodo,p_stat);
+       
+        printf ("Nº de inodo: %d\n", *p_inodo);
+        printf ("tipo: %c\n", p_stat->tipo);
+        printf ("permisos: %c\n", p_stat->permisos);
+        printf ("atime: %s\n", p_stat->atime);
+        printf ("ctime: %s\n", p_stat->ctime);
+        printf ("mtime: %s\n", p_stat->mtime);
+        printf ("nlinks: %s\n", p_stat->nlinks);
+        printf ("tamEnBytesLog: %d\n", p_stat->tamEnBytesLog);
+        printf ("numBloquesOcupados: %d\n", p_stat->numBloquesOcupados);
+        return EXITO;
+
+    }
+    return FALLO;
+}
