@@ -81,58 +81,58 @@ void mostrar_error_buscar_entrada(int error);
 /*                                       NIVEL 8                                         */
 /*****************************************************************************************/
 
-///* 
-// * Function: mi_creat
-// * ----------------------------
-// *  Función de la capa de directorios que crea un fichero/directorio y su entrada de directorio.
-// *  
-// *  const char *camino: Ruta donde se creara el fichero/directorio
-// * 
-// *  unsigned char permisos: Permisos de lectura/escritura
-// *
-// *  returns: FALLO o EXITO
-// */
-//int mi_creat(const char *camino, unsigned char permisos);
-//
-//
-///* 
-// * Function: mi_dir
-// * ----------------------------
-// *  Función de la capa de directorios que pone el contenido del directorio en un buffer de memoria
-// *  (el nombre de cada entrada puede venir separado por '|' o por un tabulador)
-// *  
-// *  const char *camino: camino del directorio o fichero.
-// * 
-// *  char *buffer: buffer donde se pone el contenido del directorio
-// *
-// *  returns: el número de entradas
-// */
-//int mi_dir(const char *camino, char *buffer);
-//
-//
-///* 
-// * Function: mi_chmod
-// * ----------------------------
-// *  ---
-// *  
-// *  const char *camino: Ruta donde se creara el fichero/directorio
-// * 
-// *  unsigned char permisos: Permisos de lectura/escritura
-// *
-// *  returns: ---
-// */
-//int mi_chmod(const char *camino, unsigned char permisos);
-//
-///* 
-// * Function: mi_stat
-// * ----------------------------
-// *  Buscar la entrada *camino con buscar_entrada() para obtener el p_inodo.
-// *  Si la entrada existe llamamos a la función mi_stat_f() de ficheros.c pasándole el p_inodo: 
-// * 
-// *  const char *camino: camino a buscar
-// * 
-// *  struct STAT *p_stat: puntero a estructura que contiene información del fichero o directorio
-// *
-// *  returns: FALLO O EXITO
-// */
-//int mi_stat(const char *camino, struct STAT *p_stat);
+/* 
+ * Function: mi_creat
+ * ----------------------------
+ *  Función de la capa de directorios que crea un fichero/directorio y su entrada de directorio.
+ *  
+ *  const char *camino: Ruta donde se creara el fichero/directorio
+ * 
+ *  unsigned char permisos: Permisos de lectura/escritura
+ *
+ *  returns: FALLO o EXITO
+ */
+int mi_creat(const char *camino, unsigned char permisos);
+
+
+/* 
+ * Function: mi_dir
+ * ----------------------------
+ *  Función de la capa de directorios que pone el contenido del directorio en un buffer de memoria
+ *  (el nombre de cada entrada puede venir separado por '|' o por un tabulador)
+ *  
+ *  const char *camino: camino del directorio o fichero.
+ * 
+ *  char *buffer: buffer donde se pone el contenido del directorio
+ *
+ *  returns: el número de entradas
+ */
+int mi_dir(const char *camino, char *buffer);
+
+
+/* 
+ * Function: mi_chmod
+ * ----------------------------
+ *  ---
+ *  
+ *  const char *camino: Ruta donde se creara el fichero/directorio
+ * 
+ *  unsigned char permisos: Permisos de lectura/escritura
+ *
+ *  returns: ---
+ */
+int mi_chmod(const char *camino, unsigned char permisos);
+
+/* 
+ * Function: mi_stat
+ * ----------------------------
+ *  Buscar la entrada *camino con buscar_entrada() para obtener el p_inodo.
+ *  Si la entrada existe llamamos a la función mi_stat_f() de ficheros.c pasándole el p_inodo: 
+ * 
+ *  const char *camino: camino a buscar
+ * 
+ *  struct STAT *p_stat: puntero a estructura que contiene información del fichero o directorio
+ *
+ *  returns: FALLO O EXITO
+ */
+int mi_stat(const char *camino, struct STAT *p_stat);
