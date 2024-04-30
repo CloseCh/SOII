@@ -1,12 +1,8 @@
 #include "ficheros.h"
 
-/*****************************************************************************************/
-/*                                       NIVEL 5                                         */
-/*****************************************************************************************/
-
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
     struct inodo inodo;
-    leer_inodo(ninodo, &inodo);
+    if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
     // Ver si hay permisos de escritura
     if ((inodo.permisos & 2) != 2) {
         fprintf(stderr, RED "No hay permisos de escritura\n"RESET);
@@ -37,7 +33,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         // escribir los nbytes del buf_original en la posición buf_bloque + desp1:
         memcpy(buf_bloque + desp1, buf_original, nbytes);
         // escribir buf_bloque modificado en el nº de bloque físico correspondiente
-        if(bwrite(nbfisico, buf_bloque) == FALLO) return FALLO;
+        if (bwrite(nbfisico, buf_bloque) == FALLO) return FALLO;
         // bytes escritos
         bytes_escritos += nbytes;
 
@@ -48,19 +44,19 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         if (bwrite(nbfisico, buf_bloque) == FALLO) return FALLO;
 
         // Acumular bytes escritos.
-        bytes_escritos += (BLOCKSIZE-desp1);
+        bytes_escritos += (BLOCKSIZE - desp1);
 
         // FASE 2: BLOQUES LÓGICOS INTERMEDIOS
         for (int bl = primerBL+1; bl < ulitmoBL; bl++){
             nbfisico = traducir_bloque_inodo(&inodo, bl, 1);
             if (bwrite(nbfisico, buf_original + (BLOCKSIZE - desp1) + (bl - primerBL - 1) * BLOCKSIZE) == FALLO) return FALLO;
+
             // Acumular bytes escritos
             bytes_escritos += BLOCKSIZE;
         }
         // FASE 3:ÚLTIMO BLOQUE LÓGICO
         nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 1);
         if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-        
 
         memcpy(buf_bloque, buf_original + (nbytes - (desp2 + 1)), desp2 + 1);
         if (bwrite(nbfisico, buf_bloque) == FALLO) return FALLO;
@@ -69,8 +65,8 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         bytes_escritos += (desp2+1);
     }
     // Actualizar el tamaño en bytes lógicos (si es necesario)
-    if((offset+nbytes) > inodo.tamEnBytesLog){
-        inodo.tamEnBytesLog = offset+nbytes;
+    if ((offset + nbytes) > inodo.tamEnBytesLog) {
+        inodo.tamEnBytesLog = offset + nbytes;
     }
     // Actualizar el mtime (porque hemos escrito en la zona de datos).
     inodo.mtime = time(NULL);
@@ -110,10 +106,8 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     //En traducir reservar=0, por lo que puede retornar -1
     unsigned int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 0);
 
-    
-
     //Mismos casos que mi_write, en vez de escribir lee
-    if(primerBL == ulitmoBL){
+    if (primerBL == ulitmoBL) {
         if (nbfisico != -1) {
             if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
             memcpy(buf_original, buf_bloque + desp1, nbytes);// se ha tenido en cuenta para nbytes < BLOCKSIZE
@@ -121,68 +115,32 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         leidos += nbytes;
     // caso2: hay que escribir en más de un bloque
     } else { 
-        //Variables adicionales
-        /* Utilizado para comparar con el blocksize en caso 2.1
-        Ya que es posible que al calcular con el desplazamiento 
-        se sobrepase el BLOCKSIZE */
-        unsigned int bytesUpper = 0; 
+        
+        // Fase 1: leemos el primer bloque teniendo en cuenta el desplazamiento
+        if (nbfisico != -1){
+            if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+            memcpy(buf_original,buf_bloque + desp1, BLOCKSIZE - desp1); // Guardamos una parte
+        }
+        leidos += BLOCKSIZE - desp1;
 
-        // caso2.1: nbytes < BLOCKSIZE
-        // caso2.2: nbytes > BLOCKSIZE
-        // caso2.3: nbytes = BLOCKSIZE
-
-        /* En este caso solo hay que hacer 2 read, si entra seguro 
-        que hay dos bloques que leer */
-        if (nbytes <= BLOCKSIZE){
-            //Obtenemos el BLOCKSIZE + lo que sobrepasa de bytes
-            bytesUpper = offset % BLOCKSIZE + nbytes;
+        // Fase 2: Un bucle hasta llegar a un bloque menor que nbytes
+        for (int bl = primerBL+1; bl < ulitmoBL; bl++){
+            nbfisico = traducir_bloque_inodo(&inodo, bl, 0);
             if (nbfisico != -1){
                 if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-                memcpy(buf_original,buf_bloque + desp1, BLOCKSIZE - desp1); // Guardamos una parte
+                memcpy(buf_original + leidos ,buf_bloque, BLOCKSIZE); // Guardamos una parte
             }
-            leidos += BLOCKSIZE - desp1;
-
-            bytesUpper -= BLOCKSIZE;//Asi obtenemos los bytes que sobrepasa
-
-            nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 0);
-            if (nbfisico != -1){
-                if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-                memcpy(buf_original, buf_bloque, bytesUpper); // Guardamos la segunda parte
-            }
-            leidos += bytesUpper;
-
-        /* En este caso solo entra en este codigo*/
-        } else if (nbytes > BLOCKSIZE){
-
-            // Fase 1: leemos el primer bloque teniendo en cuenta el desplazamiento
-            if (nbfisico != -1){
-                if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-                memcpy(buf_original,buf_bloque + desp1, BLOCKSIZE - desp1); // Guardamos una parte
-            }
-            leidos += BLOCKSIZE - desp1;
-
-            // Fase 2: Un bucle hasta llegar a un bloque menor que nbytes
-            for (int bl = primerBL+1; bl < ulitmoBL; bl++){
-                nbfisico = traducir_bloque_inodo(&inodo, bl, 0);
-                if (nbfisico != -1){
-                    if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-                    memcpy(buf_original + leidos ,buf_bloque, BLOCKSIZE); // Guardamos una parte
-                }
-                // Acumular bytes escritos
-                leidos += BLOCKSIZE;
-            }
-
-            // Fase 3: Ultimo bloque, tener en cuenta el desp2
-            nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 0);
-            if (nbfisico != -1){
-                if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-                memcpy(buf_original,buf_bloque, desp2); // Guardamos una parte
-            }
-            leidos += desp2 + 1;
-
+            // Acumular bytes escritos
+            leidos += BLOCKSIZE;
         }
 
-        
+        // Fase 3: Ultimo bloque, tener en cuenta el desp2
+        nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 0);
+        if (nbfisico != -1){
+            if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
+            memcpy(buf_original,buf_bloque, desp2); // Guardamos una parte
+        }
+        leidos += desp2 + 1;
     }
     //Actualizamos atime
     inodo.atime = time(NULL);
@@ -191,10 +149,9 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     return leidos;
 }
 
-int mi_stat_f(unsigned int ninodo, struct STAT *p_stat)
-{
+int mi_stat_f(unsigned int ninodo, struct STAT *p_stat){
     struct inodo inodo;
-    if (leer_inodo(ninodo,&inodo) == FALLO) return FALLO;
+    if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
 
     p_stat->tipo = inodo.tipo;
     p_stat->permisos = inodo.permisos;
@@ -210,15 +167,14 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat)
     return EXITO;
 }
 
-int mi_chmod_f(unsigned int ninodo, unsigned char permisos)
-{
+int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
     struct inodo inodo;
-    if (leer_inodo(ninodo,&inodo) == FALLO) return FALLO;
+    if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
     //Cambiamos los permisos por los introducidos por parametro
-    inodo.permisos=permisos;
+    inodo.permisos = permisos;
     //Actualizamos ctime
-    inodo.ctime= time(NULL);
-    if (escribir_inodo(ninodo,&inodo) == FALLO) return FALLO;
+    inodo.ctime = time(NULL);
+    if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
     
     return EXITO;
 }
@@ -230,29 +186,39 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos)
 int mi_truncar_f(unsigned int ninodo,unsigned int nbytes){
     struct inodo inodo;
     int bloques_liberados = 0;
-    int primerBL=0;
-    if (leer_inodo(ninodo,&inodo) == FALLO) return FALLO;
+    int primerBL = 0;
+
+    if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
+
     // Ver si hay permisos de escritura
     if ((inodo.permisos & 2) != 2) {
         fprintf(stderr, RED "No hay permisos de escritura\n"RESET);
         return FALLO;
     }
+
     // la función no puede truncar más allá del tamaño en bytes lógicos del inodo
-    if (nbytes >= inodo.tamEnBytesLog) return bloques_liberados; // se truncan los posibles o ninguno??
+    if (nbytes >= inodo.tamEnBytesLog) return bloques_liberados;
+
     //calcular primer bloque lógico a liberar
-    if(nbytes%BLOCKSIZE==0){
-        primerBL=nbytes/BLOCKSIZE;
-    }else{
-        primerBL=nbytes/BLOCKSIZE+1;
-    }  
-    bloques_liberados=liberar_bloques_inodo(primerBL,&inodo);
+    if (nbytes % BLOCKSIZE == 0) {
+        primerBL = nbytes / BLOCKSIZE;
+    } else {
+        primerBL = nbytes / BLOCKSIZE + 1;
+    }
+    
+    bloques_liberados = liberar_bloques_inodo(primerBL, &inodo);
+    if (bloques_liberados == FALLO) return FALLO;
+
     //Actualizar mtime y ctime
-    inodo.ctime=inodo.mtime=time(NULL);
+    inodo.ctime = inodo.mtime = time(NULL);
+
     //actualizar tamaño en bytes lógico
-    inodo.tamEnBytesLog=nbytes;
-    inodo.numBloquesOcupados=inodo.numBloquesOcupados-bloques_liberados;
+    inodo.tamEnBytesLog = nbytes;
+    inodo.numBloquesOcupados = inodo.numBloquesOcupados - bloques_liberados;
+
     //salvar inodo
-    if (escribir_inodo(ninodo,&inodo) == FALLO) return FALLO;
+    if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
+
     //devolver la cantidad de bloques liberados
     return bloques_liberados;
 }
