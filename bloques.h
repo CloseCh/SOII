@@ -37,9 +37,10 @@
 //Debuging de cada nivel
 
 
-#define DEBUGN3     1
-#define DEBUGN4     1
+#define DEBUGN3     0
+#define DEBUGN4     0
 #define DEBUGN6     0
+#define DEBUGN7     1
 
 
 /*
