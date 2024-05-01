@@ -1,6 +1,6 @@
 #include "directorios.h"
 
-//Pruebas de cada nivel
+//Pruebas de algunos niveles
 
 /*********************************************************************/
 /*                              nivel 2                              */
@@ -30,3 +30,9 @@ int traducirBloqueLogico(struct superbloque bufferSB);
 /*                              nivel 5                              */
 /*********************************************************************/
 int pruebaN5();
+
+/*********************************************************************/
+/*                              nivel 7                              */
+/*********************************************************************/
+int pruebaN7();
+void mostrar_buscar_entrada(char *camino, char reservar);

@@ -64,11 +64,21 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo);
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, 
                     unsigned int *p_entrada, char reservar, unsigned char permisos);
 
+
+/* 
+ * Function: mostrar_error_buscar_entrada
+ * ----------------------------
+ *  Función auxiliar para imprimir los mensajes de los diferentes errores, 
+ *  pasándole el número correspondiente.
+ *   
+ *  int error: 
+ *
+ *  returns: FALLO o EXITO
+ */
 void mostrar_error_buscar_entrada(int error);
 
-
 /*****************************************************************************************/
-/*                                       NIVEL 7                                         */
+/*                                       NIVEL 8                                         */
 /*****************************************************************************************/
 
 /* 
@@ -125,4 +135,4 @@ int mi_chmod(const char *camino, unsigned char permisos);
  *
  *  returns: FALLO O EXITO
  */
- int mi_stat(const char *camino, struct STAT *p_stat);
+int mi_stat(const char *camino, struct STAT *p_stat);

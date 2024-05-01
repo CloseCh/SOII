@@ -13,6 +13,10 @@ struct STAT {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
     unsigned int numBloquesOcupados; // Cantidad de bloques ocupados zona de datos+
 };
 
+/*****************************************************************************************/
+/*                                       NIVEL 5                                         */
+/*****************************************************************************************/
+
 /*
  * Function: mi_write_f
  * ----------------------------
@@ -21,7 +25,7 @@ struct STAT {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
  * la posición de escritura inicial en bytes lógicos, offset, con respecto al inodo, y el número 
  * de bytes, nbytes, que hay que escribir. 
  *   
- *  unsigned int ninodo: ---
+ *  unsigned int ninodo: numero de inodo al que se escribe
  * 
  *  const void *buf_original: buffer que se desea escribir
  * 
