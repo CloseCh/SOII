@@ -259,11 +259,7 @@ int pruebaN5(){
 
 int pruebaN7(){
     struct superbloque bufferSB;
-    if(bread(posSB, &bufferSB) == FALLO){
-        fprintf(stderr, RED
-            "Error: lectura SB\n"RESET);
-        return FALLO;
-    }
+    if (bread(posSB, &bufferSB) == FALLO) return FALLO;
 
     //Ver dato del superbloque
     lecturaSB(bufferSB);
@@ -272,7 +268,10 @@ int pruebaN7(){
     mostrar_buscar_entrada("pruebas/", 1); //ERROR_CAMINO_INCORRECTO
     mostrar_buscar_entrada("/pruebas/", 0); //ERROR_NO_EXISTE_ENTRADA_CONSULTA
     mostrar_buscar_entrada("/pruebas/docs/", 1); //ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO
+
     mostrar_buscar_entrada("/pruebas/", 1); // creamos /pruebas/
+    mostrar_buscar_entrada("/pruebas/", 0); // Consulta
+
     mostrar_buscar_entrada("/pruebas/docs/", 1); //creamos /pruebas/docs/
     mostrar_buscar_entrada("/pruebas/docs/doc1", 1); //creamos /pruebas/docs/doc1
     mostrar_buscar_entrada("/pruebas/docs/doc1/doc11", 1);  
@@ -295,6 +294,8 @@ void mostrar_buscar_entrada(char *camino, char reservar){
     printf("\ncamino: %s, reservar: %d\n", camino, reservar);
     if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, reservar, 6)) < 0) {
         mostrar_error_buscar_entrada(error);
+    } else {
+        fprintf(stderr, BLUE"Resultado = %d\n"RESET, error);
     }
     printf("**********************************************************************\n");
     return;

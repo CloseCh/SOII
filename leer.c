@@ -15,7 +15,7 @@ int main(int argc, char **argv){
     struct inodo inodo;
     if(leer_inodo(ninodo,&inodo) == FALLO) return FALLO;
 
-    unsigned int tambuffer = BLOCKSIZE;
+    unsigned int tambuffer = 1500;
     char buffer_texto[tambuffer];
     
     memset(buffer_texto, 0, tambuffer);
