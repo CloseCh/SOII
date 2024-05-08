@@ -136,9 +136,12 @@ int mi_chmod(const char *camino, unsigned char permisos);
  *  returns: FALLO O EXITO
  */
 int mi_stat(const char *camino, struct STAT *p_stat);
+/*****************************************************************************************/
+/*                                       NIVEL 9                                         */
+/*****************************************************************************************/
 
 /**
- * unction: mi_write
+ * function: mi_write
  * ----------------------------
  *  Buscaremos la entrada camino con buscar_entrada() para obtener el p_inodo. Si la entrada existe 
  *  llamamos a la función correspondiente de ficheros.c pasándole el p_inodo
@@ -157,7 +160,9 @@ int mi_stat(const char *camino, struct STAT *p_stat);
 int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes);
 
 /**
- * leer los nbytes del fichero indicado por camino, a partir del offset pasado por parámetro y 
+ * function: mi_read
+ * ----------------------------
+ * Lee los nbytes del fichero indicado por camino, a partir del offset pasado por parámetro y 
  * copiarlos en el buffer buf. Buscaremos la entrada camino con buscar_entrada() para obtener 
  * el p_inodo. Si la entrada existe llamamos a la función correspondiente de ficheros.c 
  * pasándole el p_inodo.
@@ -174,3 +179,34 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
  * 
 */
 int mi_read(const char *camino,void *buf, unsigned int offset, unsigned int nbytes);
+
+/*****************************************************************************************/
+/*                                       NIVEL 10                                        */
+/*****************************************************************************************/
+
+/**
+ * function: mi_link
+ * -----------------------
+ *  Crea el enlace de una entrada de directorio camino2 al inodo especificado por otra entrada
+ *  de directorio camino1 .
+ * 
+ *  const char *camino1:
+ * 
+ *  const char *camino2:
+ * 
+ *  returns:
+*/
+int mi_link(const char *camino1, const char *camino2);
+
+/**
+ * function: mi_unlink
+ * -----------------------
+ *  Función de la capa de directorios que borra la entrada de directorio especificada 
+ *  (no hay que olvidar actualizar la cantidad de enlaces en el inodo) y, en caso de que fuera
+ *  el último enlace existente, borrar el propio fichero/directorio.
+ * 
+ *  const char *camino: camino de la entrada a borrar.
+ * 
+ *  returns:
+*/
+int mi_unlink(const char *camino);
