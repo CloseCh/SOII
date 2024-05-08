@@ -214,7 +214,16 @@ int mi_dir(const char *camino, char *buffer){
         fprintf(stderr, RED "No hay permisos de lectura\n"RESET);
         return ERROR_PERMISO_LECTURA;
     }
-    //CONTINUARÁ
+    if (inodo.permisos & 4) strcat(buffer, "r"); else strcat(buffer, "-");
+    if (inodo.permisos & 2) strcat(buffer, "w"); else strcat(buffer, "-");
+    if (inodo.permisos & 1) strcat(buffer, "x"); else strcat(buffer, "-");
+
+    struct tm *tm; //ver info: struct tm
+    tm = localtime(&inodo.mtime);
+    sprintf(tm, "%d-%02d-%02d %02d:%02d:%02d", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min,  tm->tm_sec);
+    strcat(buffer, tm);
+
+    
 
     return EXITO;
 }
@@ -262,4 +271,76 @@ int mi_stat(const char *camino, struct STAT *p_stat){
 
     }
     return FALLO;
+}
+
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+
+    unsigned int p_inodo_dir = SB.posInodoRaiz;
+    unsigned int *p_inodo = 0;
+    unsigned int *p_entrada = 0;
+    int bytes_escritos=0;
+
+   if( buscar_entrada(camino,&p_inodo_dir,p_inodo,p_entrada,0,6)==EXITO){
+        return mi_write_f(p_inodo,buf,offset,nbytes);
+   }
+   return FALLO;
+}
+
+int mi_read(const char *camino,void *buf, unsigned int offset, unsigned int nbytes){
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+
+    unsigned int p_inodo_dir = SB.posInodoRaiz;
+    unsigned int *p_inodo = 0;
+    unsigned int *p_entrada = 0;
+    int bytes_leidos=0;
+
+   if( buscar_entrada(camino,&p_inodo_dir,p_inodo,p_entrada,0,6)==EXITO){
+        return mi_read_f(p_inodo,buf,offset,nbytes);
+   }
+   return FALLO;
+}
+
+int mi_link(const char *camino1, const char *camino2){
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+
+    unsigned int p_inodo_dir = SB.posInodoRaiz;
+    unsigned int *p_inodo1 = 0;
+    unsigned int *p_entrada = 0;
+    unsigned int p_inodo_dir2 = SB.posInodoRaiz;
+    unsigned int *p_inodo2 = 0;
+    unsigned int *p_entrada2 = 0;
+    struct inodo inodo1;
+    struct inodo inodo2;
+
+    //comprobar que la entrada camino1 exista
+    if(buscar_entrada(camino1,&p_inodo_dir,p_inodo1,p_entrada,0,6)==FALLO) return FALLO;
+    //comprobar que tiene permiso de lectura
+    leer_inodo(*p_inodo1,&inodo1);
+    if((inodo1.permisos & 4) != 4) {
+        fprintf(stderr, RED "No hay permisos de lectura\n"RESET);
+        return ERROR_PERMISO_LECTURA;
+    }
+    //comprobar que camino1 y camino2 son ficheros
+    if(inodo1.tipo!='f'){
+        fprintf(stderr, RED "No es un fichero\n"RESET);
+        return FALLO;
+    }
+    //mirar que la entrada de camino2 no exista
+    if(buscar_entrada(camino2,&p_inodo_dir2,p_inodo2,p_entrada2,1,6)==FALLO){
+        return ERROR_ENTRADA_YA_EXISTENTE;
+    }
+    //Leemos la entrada creada correspondiente a camino2, o sea la entrada p_entrada2 de p_inodo_dir2
+    leer_inodo(p_inodo2,&inodo2);
+    //creamos el enlace: Asociamos a esta entrada el mismo inodo que el asociado a la entrada de camino1, es decir p_inodo1.
+    
+    //CONTINUAR...
+}
+
+int mi_unlink(const char *camino){
+ //CONTINUAR...
+
 }
