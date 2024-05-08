@@ -2,6 +2,11 @@
 
 
 int main(int argc, char **argv){
+    if (argc < 3){
+        fprintf(stderr, RED"Sintaxis: mi_mkfs <nombre_dispositivo> <nbloques>"RESET);
+        exit(FALLO);
+    }
+
     //montar el dispositivo virtual
     bmount(argv[1]);
 

@@ -119,7 +119,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         // Fase 1: leemos el primer bloque teniendo en cuenta el desplazamiento
         if (nbfisico != -1){
             if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-            memcpy(buf_original,buf_bloque + desp1, BLOCKSIZE - desp1); // Guardamos una parte
+            memcpy(buf_original, buf_bloque + desp1, BLOCKSIZE - desp1); // Guardamos una parte
         }
         leidos += BLOCKSIZE - desp1;
 
@@ -138,7 +138,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         nbfisico = traducir_bloque_inodo(&inodo, ulitmoBL, 0);
         if (nbfisico != -1){
             if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
-            memcpy(buf_original,buf_bloque, desp2); // Guardamos una parte
+            memcpy(buf_original, buf_bloque, desp2); // Guardamos una parte
         }
         leidos += desp2 + 1;
     }

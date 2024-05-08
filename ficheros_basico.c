@@ -596,6 +596,39 @@ int liberar_inodo(unsigned int ninodo){
 
 int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
     unsigned int nivel_punteros, indice, ptr = 0, nBL, ultimoBL; 
+    /*
+    bloques_punteros[0] para indirectos 1 1024bytes
+
+    leer el inodo el I0, si hay una direccion hace bread
+        Y con el bread se lee el bloque de datos al que apunta I0 QUE CONTIENE PUNTEROS Y
+
+    |SB|INODO|MB|     DATOS    |
+
+
+
+    bloques_punteros[1] para indirectos 2 1024bytes
+    leer el inodo el I1, si hay una direccion hace bread
+    por ejemplo. 
+        1-Comprobar que hay bloque de datos reservado
+        2-leer el bloque de datos si esta reservado
+        El resultado de la lectura es:
+
+    bloques_punteros[1] = |   |116||117|        PUNTEROS       |
+    bloques_punteros[1][116] = 3143
+
+    HACE UN BRAD a bloque de datos 3143
+    y lo guarda en  bloques_punteros[0] = |        PUNTEROS       |
+
+    bloques_punteros[1][117] = 3144
+    HACE UN BRAD a bloque de datos 3144
+    y lo guarda en  bloques_punteros[0] = |        PUNTEROS       |
+
+
+
+
+
+    bloques_punteros[2] para indirectos 3 1024bytes
+    */
     unsigned int bloques_punteros[3][NPUNTEROS]; //array de bloques de punteros
     unsigned int bufAux_punteros[NPUNTEROS]; // para llenar de 0s y comparar
     int nRangoBL;
@@ -617,6 +650,8 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
     int numbers[] = {1,NPUNTEROS,NPUNTEROS*NPUNTEROS}; //Usado para simplificar código (combina con casoBL)
     char casoBL = 0; //Usado para el debugging y minimizar código quita 2 while identicos (mejora 2)
 
+
+
     if (inodo->tamEnBytesLog == 0){
         return liberados;
     }
@@ -633,6 +668,7 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
     #if DEBUGN6
         fprintf(stderr, CYAN NEGRITA"[liberar_bloques_inodo()→ primer BL: %d, último BL: %d]\n"RESET, primerBL, ultimoBL);
     #endif
+
     for (nBL = primerBL; nBL <= ultimoBL; nBL++){
         nRangoBL = obtener_nRangoBL(inodo, nBL, &ptr);  //0:D, 1:I0, 2:I1, 3:I2
         if (nRangoBL < 0) return FALLO;
@@ -651,11 +687,26 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
             }
 
             ptr_nivel[nivel_punteros - 1] = ptr;
+
             indices[nivel_punteros - 1] = indice;
+
             ptr = bloques_punteros[nivel_punteros - 1][indice];
+
             nivel_punteros--;
         }
 
+
+        /*
+        estamos en indirectos 3
+        
+        si llegamos a bloques_punteros[2][5] = 3146
+        si llegamos a bloques_punteros[1][25] = 3147
+        si llegamos a bloques_punteros[0][120] = 3148
+
+        sale de while con ptr = 3148
+        */
+
+        //Parte de borrado
         if (ptr > 0) {
             if (liberar_bloque(ptr) == FALLO) return FALLO;
             #if DEBUGN6
@@ -674,11 +725,11 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                 cpy_nRangoBL = nRangoBL;
 
                 while (cpy_nRangoBL > 0) {
-                    pos = obtener_indice(nBL,cpy_nRangoBL);
+                    pos = obtener_indice(nBL, cpy_nRangoBL);
                     if (pos == FALLO) return FALLO;
 
                     //Limpia de 0-pos en la copia del buffer
-                    memcpy(cpy_bloques_punteros[cpy_nRangoBL - 1],bufAux_punteros, pos * sizeof(unsigned int));
+                    memcpy(cpy_bloques_punteros[cpy_nRangoBL - 1], bufAux_punteros, pos * sizeof(unsigned int));
                     cpy_nRangoBL--;
                 }
 
@@ -702,18 +753,19 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                         //incluir mejora 1
                         iterador = 1;//En este caso es para obtener el indice
                         cpy_nRangoBL = nRangoBL;//Para no alterar nRangoBL
-                        if (cpy_nRangoBL == 3) cpy_nRangoBL--; 
-                        //Prohibido funcionar en indirectos2(Ya que no hay los saltos)
+                        if (cpy_nRangoBL == 3) cpy_nRangoBL--;
+
+                        //Prohibido funcionar en punteros_nivel 3(Ya que no hay los saltos)
                         //Prohibido funcionar en el ultimo bloque logico(Si no se sale fuera de rango)
                         //Condicion de salida nRango mayor al rangoBL copiado
-                        while (nivel_punteros == cpy_nRangoBL && cpy_nRangoBL >= iterador && nBL != ultimoBL) {
+                        while (cpy_nRangoBL >= iterador && nBL != ultimoBL) {
                             oldBL = nBL;
 
                             //Para saber la posición actual en el bloque de punteros
                             pos = obtener_indice(nBL, iterador);
                             if (pos == FALLO) return FALLO;
 
-                            if (iterador == 1) nBL += INDIRECTOS0 - DIRECTOS - pos - 1;
+                            if (iterador == 1) nBL += NPUNTEROS - pos - 1;
                             if (iterador == 2) nBL += (NPUNTEROS - pos - 1) * NPUNTEROS;
                                 
                             if (nBL != oldBL){
@@ -722,7 +774,6 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                                 #endif
                                 saltado = 1;
                             }
-                                
                             iterador++;
                         }
 
@@ -730,11 +781,13 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                             inodo->punterosIndirectos[nRangoBL-1]=0;
                         
                         nivel_punteros++;
-                    }else{
+                    } else {
                         iterador = nivel_punteros;
                         while (iterador > 0) {
                             //Si no ha realizado un salto entonces se escribe, ya que si ha saltado es que era todos 0
                             //en el array bloques_punteros.
+
+                            //Si ya hemos borrado lo que nos interesa entonces escribir
                             if (memcmp(cpy_bloques_punteros[iterador - 1], bufAux_punteros, BLOCKSIZE) == 0 && !saltado){
                                 // hemos de salir del bucle ya que no será necesario liberar los bloques de niveles
                                 // superiores de los que cuelga si no está vacio
@@ -756,7 +809,7 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
 
         } else {
             //incluir mejora 2, esta es para saltar los indexados, llegar al BL ocupado en el
-            if (nRangoBL > 0){
+            if (nRangoBL > 0) {
                 oldBL = nBL;
                 bloques = 0;
                 casoBL = 0;
@@ -790,9 +843,11 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                             memcmp(cpy_bloques_punteros[1], bufAux_punteros, BLOCKSIZE) == 0 && 
                             nRangoBL == 3){
                         casoBL = 3;
+                        
                     } else if (memcmp(cpy_bloques_punteros[0], bufAux_punteros, BLOCKSIZE) == 0 && 
                              nBL == oldBL && nRangoBL == 2){
                         casoBL = 2;
+                        
                     } else if (nBL == oldBL && nRangoBL == 1) 
                         casoBL = 1;
 
@@ -800,6 +855,7 @@ int liberar_bloques_inodo(unsigned int primerBL,struct inodo *inodo){
                     if (casoBL > 0){
                         while(bloques < NPUNTEROS && cpy_bloques_punteros[nRangoBL - 1][bloques] == 0){
                             bloques++;
+
                             nBL += numbers[nRangoBL - 1];
                         }
                         //Para decir que el nPunteros ya esta vacio, si no esta el while de arriba lo
