@@ -203,34 +203,6 @@ int mi_dir(const char *camino, char *buffer){
 
     unsigned int p_inodo_dir = SB.posInodoRaiz;
     struct inodo inodo;
-<<<<<<< HEAD
-    struct entrada entrada;
-
-    struct superbloque SB;
-    bread(posSB, &SB);
-
-    unsigned int p_inodo_dir=SB.posInodoRaiz;
-    unsigned int p_inodo;
-    unsigned int *p_entrada;
-    unsigned int cant_entradas_inodo;
-    int num_entrada_inodo;
-
-    char inicial[sizeof(entrada.nombre)];
-    char final[strlen(camino)];
-
-    int num_entradas = 0; // Contador de entradas
-
-    buscar_entrada(camino,&p_inodo_dir,&p_inodo,p_entrada,0,4);
-    leer_inodo(&p_inodo,&inodo);
-    int offset=(*p_entrada)*sizeof(entrada);
-    // A CONTINUACIÓN SE LEE UNA ENTRADA?
-    mi_read_f(&p_inodo,buffer,offset,sizeof(struct entrada));
-    
-
-    if ((inodo.tipo != 'd') || ((inodo.permisos & 4) != 4)) {
-        fprintf(stderr, RED "Tipo de archivo no válido\n" RESET);
-        return FALLO;
-=======
     unsigned int *p_inodo = 0;
     unsigned int *p_entrada = 0;
 
@@ -241,7 +213,6 @@ int mi_dir(const char *camino, char *buffer){
     if((inodo.permisos & 4) != 4) {
         fprintf(stderr, RED "No hay permisos de lectura\n"RESET);
         return ERROR_PERMISO_LECTURA;
->>>>>>> b9199263a21aafc232371f9721dafc4231dc024e
     }
     if (inodo.permisos & 4) strcat(buffer, "r"); else strcat(buffer, "-");
     if (inodo.permisos & 2) strcat(buffer, "w"); else strcat(buffer, "-");
@@ -280,23 +251,12 @@ int mi_stat(const char *camino, struct STAT *p_stat){
     struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
-<<<<<<< HEAD
-     unsigned int *p_inodo;
-     unsigned int *p_entrada;
-
-     struct superbloque SB;
-     bread(posSB, &SB);
-     
-    if(buscar_entrada(camino,SB.posInodoRaiz,p_inodo,p_entrada,0,p_stat->permisos)==EXITO){
-        mi_stat_f(p_inodo,p_stat);
-=======
     unsigned int p_inodo_dir = SB.posInodoRaiz;
     unsigned int *p_inodo = 0;
     unsigned int *p_entrada = 0;
      
     if(buscar_entrada(camino, &p_inodo_dir, p_inodo, p_entrada, 0, p_stat->permisos)==EXITO){
         mi_stat_f(*p_inodo,p_stat);
->>>>>>> b9199263a21aafc232371f9721dafc4231dc024e
        
         printf ("Nº de inodo: %d\n", *p_inodo);
         printf ("tipo: %c\n", p_stat->tipo);
