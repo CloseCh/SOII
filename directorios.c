@@ -272,3 +272,34 @@ int mi_stat(const char *camino, struct STAT *p_stat){
     }
     return FALLO;
 }
+
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+
+    unsigned int p_inodo_dir = SB.posInodoRaiz;
+    unsigned int *p_inodo = 0;
+    unsigned int *p_entrada = 0;
+    int bytes_escritos=0;
+
+   if( buscar_entrada(camino,&p_inodo_dir,p_inodo,p_entrada,0,6)==EXITO){
+        return mi_write_f(p_inodo,buf,offset,nbytes);
+   }
+   return FALLO;
+}
+
+int mi_read(const char *camino,void *buf, unsigned int offset, unsigned int nbytes){
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+
+    unsigned int p_inodo_dir = SB.posInodoRaiz;
+    unsigned int *p_inodo = 0;
+    unsigned int *p_entrada = 0;
+    int bytes_leidos=0;
+
+   if( buscar_entrada(camino,&p_inodo_dir,p_inodo,p_entrada,0,6)==EXITO){
+        return mi_read_f(p_inodo,buf,offset,nbytes);
+   }
+   return FALLO;
+
+}

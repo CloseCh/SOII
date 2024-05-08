@@ -136,3 +136,41 @@ int mi_chmod(const char *camino, unsigned char permisos);
  *  returns: FALLO O EXITO
  */
 int mi_stat(const char *camino, struct STAT *p_stat);
+
+/**
+ * unction: mi_write
+ * ----------------------------
+ *  Buscaremos la entrada camino con buscar_entrada() para obtener el p_inodo. Si la entrada existe 
+ *  llamamos a la función correspondiente de ficheros.c pasándole el p_inodo
+ *  
+ * const char *camino: camino a buscar
+ * 
+ *  const void *buf_original: buffer que se desea escribir
+ * 
+ *  unsigned int offset: posición inicial en bytes lógicos
+ * 
+ *  unsigned int nbytes: número de bytes a escribir
+ *
+ *  returns: cantidad de bytes escritos, -1 si error.
+ * 
+*/
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes);
+
+/**
+ * leer los nbytes del fichero indicado por camino, a partir del offset pasado por parámetro y 
+ * copiarlos en el buffer buf. Buscaremos la entrada camino con buscar_entrada() para obtener 
+ * el p_inodo. Si la entrada existe llamamos a la función correspondiente de ficheros.c 
+ * pasándole el p_inodo.
+ * 
+ * const char *camino: camino a buscar
+ * 
+ * const void *buf_original: buffer que se desea leer (inicializado a 0s)
+ * 
+ *  unsigned int offset: posición inicial en bytes lógicos
+ * 
+ *  unsigned int nbytes: número de bytes a leer
+ *
+ *  returns: cantidad de bytes leidos, -1 si error.
+ * 
+*/
+int mi_read(const char *camino,void *buf, unsigned int offset, unsigned int nbytes);
