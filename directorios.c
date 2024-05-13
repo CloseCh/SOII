@@ -198,18 +198,18 @@ int mi_creat(const char *camino, unsigned char permisos){
     return EXITO;
 }
 
-int mi_dir(const char *camino, char *buffer){
+int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
     struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) return FALLO;
-
-    struct inodo inodo;
 
     unsigned int p_inodo_dir = SB.posInodoRaiz;
     unsigned int p_inodo = 0;
     unsigned int p_entrada = 0;
-
-    buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
+    int error;
     
+    if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)) < 0) {
+        mostrar_error_buscar_entrada(error);
+    }
 
     //Lecturas del disco
     unsigned int leidos = 0;
@@ -242,8 +242,9 @@ int mi_chmod(const char *camino, unsigned char permisos){
     unsigned int p_entrada = 0;
     int error;
 
-    error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, permisos);
-
+    if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, permisos)) < 0) {
+        mostrar_error_buscar_entrada(error);
+    }
     //Si existe la entrada
     if(error == EXITO){
         mi_chmod_f(p_inodo, permisos);
@@ -259,8 +260,11 @@ int mi_stat(const char *camino, struct STAT *p_stat){
     unsigned int p_inodo_dir = SB.posInodoRaiz;
     unsigned int p_inodo = 0;
     unsigned int p_entrada = 0;
-    
-    if(buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)==EXITO){
+    int error;
+
+    if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)) < 0) {
+        mostrar_error_buscar_entrada(error);
+    } else {
         mi_stat_f(p_inodo, p_stat);
        
         printf ("Nº de inodo: %d\n", p_inodo);

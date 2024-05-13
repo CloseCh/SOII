@@ -113,7 +113,7 @@ int mi_creat(const char *camino, unsigned char permisos);
  *
  *  returns: el número de entradas
  */
-int mi_dir(const char *camino, char *buffer);
+int mi_dir(const char *camino, char *buffer, char tipo, char flag);
 
 /* 
  * Function: mi_chmod
