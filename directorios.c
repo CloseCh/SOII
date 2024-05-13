@@ -202,36 +202,108 @@ int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
     struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
+    struct inodo inodo;
+
+    //Creamos un buffer y trabajar sobre ella, necesario para ver el total
+    char bufferAux[TAMBUFFER];
+    memset(bufferAux, 0, TAMBUFFER);
+
     unsigned int p_inodo_dir = SB.posInodoRaiz;
     unsigned int p_inodo = 0;
     unsigned int p_entrada = 0;
     int error;
     
+    //Buscar la entrada
     if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)) < 0) {
         mostrar_error_buscar_entrada(error);
+        return FALLO;
     }
+    
+    //Variable para usar en strcat
+    char lecValorInodo[128];
+    memset(lecValorInodo, 0, 128);
 
-    //Lecturas del disco
+    //Caso fichero
+    
+    //Caso directorio
+    //Variables para leer entradas y iterar sobre ella
     unsigned int leidos = 0;
     unsigned int leidosTotal = 0;
     int cantEntrada = BLOCKSIZE/sizeof(struct entrada);
+
+    //En el caso con flag -l, incluir lo siguiente en el bufferAux
+    if (flag == 1){
+        strcat(bufferAux, "Tipo\tPermisos\tmTime\t\t\tTamaño\tNombre\n");
+        strcat(bufferAux, "-----------------------------------------------------------------------\n");
+    }
+
+    //Buffer de entradas
     struct entrada entradas[cantEntrada];
     memset(entradas, 0, BLOCKSIZE);
 
+    //Imprimir total
+    //Primera parte, lectura
     while ((leidos = mi_read_f(p_inodo, entradas, leidosTotal, BLOCKSIZE)) != 0){
         leidosTotal += leidos;
+
+        //Segunda parte que itera sobre lo leido con mi_read_f
         int entradasLeidas = leidos/sizeof(struct entrada);
         int i = 0;
-        while(i < entradasLeidas){
-            strcat(buffer,entradas[i].nombre);
-            strcat(buffer," ");
-            i++;
-        }
-    }
-    
 
+        //Caso sin flag de -l
+        if (flag == 0){
+            while(i < entradasLeidas){
+                strcat(bufferAux, BLUE);
+                strcat(bufferAux, entradas[i].nombre);
+                strcat(bufferAux, RESET);
+                strcat(bufferAux,"\t");
+                i++;
+            }
+        
+        //Caso con flag de -l
+        } else {
+            while(i < entradasLeidas){
+                //Leer el inodo obtenido
+                leer_inodo(entradas[i].ninodo, &inodo);
+
+                //Imprimir tipo
+                sprintf(lecValorInodo, "%c\t",inodo.tipo);
+                strcat(bufferAux, lecValorInodo);
+
+                //Imprimir los permisos en octal
+                if (inodo.permisos & 4) strcat(bufferAux, "r"); else strcat(bufferAux, "-");
+                if (inodo.permisos & 2) strcat(bufferAux, "w"); else strcat(bufferAux, "-");
+                if (inodo.permisos & 1) strcat(bufferAux, "x"); else strcat(bufferAux, "-");
+                strcat(bufferAux,"\t\t");
+
+                //Imprimir mtime
+                struct tm *tm; 
+                tm = localtime(&inodo.mtime);
+                sprintf(lecValorInodo, "%d-%02d-%02d %02d:%02d:%02d \t", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min,  tm->tm_sec);
+                strcat(bufferAux, lecValorInodo);
+
+                //Imprimir tamaño
+                sprintf(lecValorInodo, "%d\t",inodo.tamEnBytesLog);
+                strcat(bufferAux, lecValorInodo);
+
+                //Imprimir nombre
+                if (inodo.tipo == 'd') sprintf(lecValorInodo, LGREEN"%s\n"RESET,entradas[i].nombre);
+                if (inodo.tipo == 'f') sprintf(lecValorInodo, LBLUE"%s\n"RESET,entradas[i].nombre);
+                strcat(bufferAux, lecValorInodo);
+
+                i++;
+            }
+        }
+        
+    }
+
+    //Para imprimir el total
+    sprintf(buffer, "Total: %ld \n",leidosTotal/sizeof(struct entrada));
+    strcat(buffer, bufferAux);
     return EXITO;
 }
+
+
 
 int mi_chmod(const char *camino, unsigned char permisos){
     struct superbloque SB;
