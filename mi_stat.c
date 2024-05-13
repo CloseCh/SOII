@@ -12,7 +12,7 @@ int main(int argc, char **argv){
     //montar el dispositivo virtual
     bmount(argv[1]);
 
-    struct stat estado;
+    struct STAT estado;
 
     mi_stat(ruta, &estado);
 

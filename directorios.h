@@ -14,6 +14,9 @@
 #define TAMNOMBRE 60 //tamaño del nombre de directorio o fichero, en Ext2 = 256
 #define PROFUNDIDAD 32
 
+#define TAMFILA 100
+#define TAMBUFFER (TAMFILA*1000)
+
 struct entrada {
     char nombre[TAMNOMBRE];
     unsigned int ninodo;
@@ -113,7 +116,7 @@ int mi_creat(const char *camino, unsigned char permisos);
  *
  *  returns: el número de entradas
  */
-int mi_dir(const char *camino, char *buffer);
+int mi_dir(const char *camino, char *buffer, char tipo, char flag);
 
 /* 
  * Function: mi_chmod
