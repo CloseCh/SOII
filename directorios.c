@@ -348,7 +348,6 @@ int mi_link(const char *camino1, const char *camino2){
     leer_inodo(p_inodo2,&inodo2);
     //creamos el enlace: Asociamos a esta entrada el mismo inodo que el asociado a la entrada de camino1, es decir p_inodo1.
     
-    //CONTINUAR...
 }
 
 int mi_unlink(const char *camino){
