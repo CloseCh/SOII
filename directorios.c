@@ -347,6 +347,14 @@ int mi_link(const char *camino1, const char *camino2){
     //Leemos la entrada creada correspondiente a camino2, o sea la entrada p_entrada2 de p_inodo_dir2
     leer_inodo(p_inodo2,&inodo2);
     //creamos el enlace: Asociamos a esta entrada el mismo inodo que el asociado a la entrada de camino1, es decir p_inodo1.
+    *p_inodo2=&p_inodo1;
+    //Escribimos la entrada modificada en p_inodo_dir2
+    escribir_inodo(p_inodo1,p_inodo_dir2);
+    liberar_inodo(p_inodo2);
+    inodo1.nlinks++;
+    //Actualizamos ctime
+    inodo1.ctime=time(NULL);
+    return EXITO;
     
 }
 
