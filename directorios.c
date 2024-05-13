@@ -130,7 +130,6 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                 }
                 
                 //Escribir en la entrada del directorio padre
-                inodo_dir.tamEnBytesLog += sizeof(struct entrada);
                 if(mi_write_f(*p_inodo_dir, &entrada, inodo_dir.tamEnBytesLog, sizeof(struct entrada)) == FALLO){
                     if(entrada.ninodo != -1) liberar_inodo(entrada.ninodo);
                     return FALLO;
@@ -201,14 +200,35 @@ int mi_dir(const char *camino, char *buffer){
     struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
-    unsigned int p_inodo_dir = SB.posInodoRaiz;
     struct inodo inodo;
-    unsigned int *p_inodo = 0;
-    unsigned int *p_entrada = 0;
 
-    buscar_entrada(camino, &p_inodo_dir, p_inodo, p_entrada,0,6/*no se que poner*/);
-    leer_inodo(*p_inodo,&inodo);
+    unsigned int p_inodo_dir = SB.posInodoRaiz;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
 
+    buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6);
+    
+
+    //Lecturas del disco
+    unsigned int leidos = 0;
+    unsigned int leidosTotal = 0;
+    int cantEntrada = BLOCKSIZE/sizeof(struct entrada);
+    struct entrada entradas[cantEntrada];
+    memset(entradas, 0, BLOCKSIZE);
+
+    while ((leidos = mi_read_f(p_inodo, entradas, leidosTotal, BLOCKSIZE)) != 0){
+        leidosTotal += leidos;
+        int entradasLeidas = leidos/sizeof(struct entrada);
+        int i = 0;
+        while(i < entradasLeidas){
+            strcat(buffer,entradas[i].nombre);
+            strcat(buffer," ");
+            i++;
+        }
+    }
+    
+
+    /*
     if(inodo.tipo !='d') return FALLO;
     if((inodo.permisos & 4) != 4) {
         fprintf(stderr, RED "No hay permisos de lectura\n"RESET);
@@ -222,7 +242,7 @@ int mi_dir(const char *camino, char *buffer){
     tm = localtime(&inodo.mtime);
     sprintf(tm, "%d-%02d-%02d %02d:%02d:%02d", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min,  tm->tm_sec);
     strcat(buffer, tm);
-
+    */
     
 
     return EXITO;
@@ -233,15 +253,15 @@ int mi_chmod(const char *camino, unsigned char permisos){
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
     unsigned int p_inodo_dir = SB.posInodoRaiz;
-    unsigned int *p_inodo = 0;
-    unsigned int *p_entrada = 0;
-    unsigned int error;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+    int error;
 
-    error = buscar_entrada(camino, &p_inodo_dir, p_inodo, p_entrada, 0, permisos);
+    error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, permisos);
 
     //Si existe la entrada
     if(error == EXITO){
-        mi_chmod_f(*p_inodo, permisos);
+        mi_chmod_f(p_inodo, permisos);
         return  EXITO;
     }
     return  FALLO;
@@ -252,18 +272,18 @@ int mi_stat(const char *camino, struct STAT *p_stat){
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
     unsigned int p_inodo_dir = SB.posInodoRaiz;
-    unsigned int *p_inodo = 0;
-    unsigned int *p_entrada = 0;
-     
-    if(buscar_entrada(camino, &p_inodo_dir, p_inodo, p_entrada, 0, p_stat->permisos)==EXITO){
-        mi_stat_f(*p_inodo,p_stat);
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+    
+    if(buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)==EXITO){
+        mi_stat_f(p_inodo, p_stat);
        
-        printf ("Nº de inodo: %d\n", *p_inodo);
+        printf ("Nº de inodo: %d\n", p_inodo);
         printf ("tipo: %c\n", p_stat->tipo);
-        printf ("permisos: %c\n", p_stat->permisos);
-        printf ("atime: %s\n", ctime(&p_stat->atime));
-        printf ("ctime: %s\n", ctime(&p_stat->ctime));
-        printf ("mtime: %s\n", ctime(&p_stat->mtime));
+        printf ("permisos: %d\n", p_stat->permisos);
+        printf ("atime: %s", ctime(&p_stat->atime));
+        printf ("ctime: %s", ctime(&p_stat->ctime));
+        printf ("mtime: %s", ctime(&p_stat->mtime));
         printf ("nlinks: %d\n", p_stat->nlinks);
         printf ("tamEnBytesLog: %d\n", p_stat->tamEnBytesLog);
         printf ("numBloquesOcupados: %d\n", p_stat->numBloquesOcupados);

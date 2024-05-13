@@ -105,7 +105,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     //En traducir reservar=0, por lo que puede retornar -1
     unsigned int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 0);
-
+    
     //Mismos casos que mi_write, en vez de escribir lee
     if (primerBL == ulitmoBL) {
         if (nbfisico != -1) {

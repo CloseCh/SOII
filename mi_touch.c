@@ -14,11 +14,11 @@ int main(int argc, char **argv){
         exit(FALLO);
     }
 
-    //Comprobar que sea un directorio
+    //Comprobar aver si es un fichero
     char* ruta = argv[3];
 
-    if (ruta[strlen(ruta)-1] != '/'){
-        fprintf(stderr, RED"No es un directorio\n"RESET);
+    if (ruta[strlen(ruta)-1] == '/'){
+        fprintf(stderr, RED"No es un fichero\n"RESET);
         exit(FALLO);
     }
 
