@@ -12,10 +12,16 @@
 #define ERROR_ENTRADA_YA_EXISTENTE (-7)
 #define ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO (-8)
 #define TAMNOMBRE 60 //tamaño del nombre de directorio o fichero, en Ext2 = 256
+#define PROFUNDIDAD 32
 
 struct entrada {
     char nombre[TAMNOMBRE];
     unsigned int ninodo;
+};
+
+struct UlitmaEntrada{
+    char camino [TAMNOMBRE*PROFUNDIDAD];
+    int p_inodo;
 };
 
 
