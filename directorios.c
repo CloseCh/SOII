@@ -349,16 +349,47 @@ int mi_link(const char *camino1, const char *camino2){
     //creamos el enlace: Asociamos a esta entrada el mismo inodo que el asociado a la entrada de camino1, es decir p_inodo1.
     *p_inodo2=&p_inodo1;
     //Escribimos la entrada modificada en p_inodo_dir2
-    escribir_inodo(p_inodo1,p_inodo_dir2);
+    escribir_inodo(p_inodo_dir2,p_inodo1);
     liberar_inodo(p_inodo2);
     inodo1.nlinks++;
     //Actualizamos ctime
     inodo1.ctime=time(NULL);
+    if (escribir_inodo(p_inodo1, &inodo1) == FALLO) return FALLO;
     return EXITO;
     
 }
 
 int mi_unlink(const char *camino){
- //CONTINUAR...
+  struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+    unsigned int p_inodo_dir = SB.posInodoRaiz;
+    unsigned int *p_inodo = 0;
+    unsigned int *p_entrada = 0;
+    struct inodo inodo;
+    //Comprobamos que esxita la entrada
+    if(buscar_entrada(camino,&p_inodo_dir,p_inodo,p_entrada,0,6)==FALLO) return FALLO;
+    //si es directorio no vacio salimos
+    if(inodo.tipo=='d' && inodo.tamEnBytesLog >0)return FALLO;
+    leer_inodo(p_inodo_dir,&inodo);
+    int nentradas=inodo.tamEnBytesLog/sizeof(struct entrada);
 
+    if(p_entrada==nentradas-1){
+        mi_truncar_f(p_entrada,p_inodo-nentradas);
+    }else{
+        //Leemos la ultima entrada
+        leer_inodo(nentradas-1,&inodo);
+        //La escribimos en la posicion de entrada a eliminar
+        escribir_inodo(p_entrada,&inodo);
+        mi_truncar_f(p_entrada,p_inodo-nentradas);
+    }
+
+    leer_inodo(p_inodo,&inodo);
+    inodo.nlinks--;
+    //Si no quedan enlaces se libera
+     if(inodo.nlinks==0){
+        liberar_inodo(p_inodo);
+     }
+    inodo.ctime=time(NULL);
+    if (escribir_inodo(p_inodo, &inodo) == FALLO) return FALLO;
+    return EXITO;
 }
