@@ -115,7 +115,6 @@ int mi_creat(const char *camino, unsigned char permisos);
  */
 int mi_dir(const char *camino, char *buffer);
 
-
 /* 
  * Function: mi_chmod
  * ----------------------------
