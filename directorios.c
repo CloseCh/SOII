@@ -1,4 +1,5 @@
 #include "directorios.h"
+static struct UltimaEntrada UltimaEntradaEscritura;
 
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
     //Primero ver que ha pasado bien el directorio
