@@ -359,9 +359,9 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
     unsigned int p_inodo_dir = SB.posInodoRaiz;
-    unsigned int *p_inodo = 0;
-    unsigned int *p_entrada = 0;
-
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+    int error;
     /*mejora
     if(strcmp(UltimaEntradaEscritura.camino,camino)==0){
         p_inodo=UltimaEntradaEscritura.p_inodo;
@@ -372,10 +372,12 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     */
 
 
-   if( buscar_entrada(camino,&p_inodo_dir,p_inodo,p_entrada,0,6)==EXITO){
-        return mi_write_f(*p_inodo,buf,offset,nbytes);
-   }
-   return FALLO;
+    if((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)) < 0) {
+        mostrar_error_buscar_entrada(error);
+        return FALLO;
+    } else {
+        return mi_write_f(p_inodo, buf, offset, nbytes);
+    }
 }
 
 int mi_read(const char *camino,void *buf, unsigned int offset, unsigned int nbytes){
