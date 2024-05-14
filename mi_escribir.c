@@ -11,9 +11,13 @@ int main(int argc, char **argv)
     int escritos=0;
     // Montamos el disco
     bmount(argv[1]);
-
-    // miramos longitud de texto
-    unsigned int length = strlen(argv[3]);
+    unsigned int length = 0;
+    // miramos longitud de texto`
+    for(int i=3;i<argc-1;i++){
+        length=length+strlen(argv[i]); 
+        if(i>3) length++; //el espacio en blanco ocupa un espacio
+    }
+    
     fprintf(stdout, "longitud texto: %d\n", length);
 
     //FALTA COMPROBAR SI ES UN FICHERO 
