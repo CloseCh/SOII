@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
     //FALTA COMPROBAR SI ES UN FICHERO 
 
-    escritos=mi_write(argv[2], argv[3], argv[4], length);
+    escritos=mi_write(argv[2], argv[3], *argv[4], length);
     fprintf(stderr, "Bytes escritos: %d\n", escritos);
     // Desmontar el disco
     bumount(argv[1]);
