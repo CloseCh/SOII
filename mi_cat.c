@@ -17,12 +17,15 @@ int main(int argc, char **argv){
     unsigned int leidos = 0;
     unsigned int totalLeidos = 0;
     char *dispositivo = argv[1]; //Obtener el dispositivo
-    bmount(dispositivo);
 
     unsigned int tambuffer = 1500;
     char buffer_texto[tambuffer];
     memset(buffer_texto, 0, tambuffer);
 
+    //Montar el dispositivo
+    bmount(dispositivo);
+
+    //Realizar lecturas con mi_read
     while ((leidos = mi_read(ruta, buffer_texto, totalLeidos, tambuffer)) > 0){
 
         //Imprimir lo que se ha leido
@@ -33,14 +36,13 @@ int main(int argc, char **argv){
         memset(buffer_texto, 0, tambuffer);
     }
 
+    //Imprimir el total de leidos
     char string[256];
     sprintf(string, "\n\nTotal_leidos %d\n", totalLeidos);
     write(2, string, strlen(string));
 
+    //Desmontar el dispositivo
     bumount();
 
     return EXITO;
-
-
-
 }

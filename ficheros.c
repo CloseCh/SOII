@@ -9,6 +9,10 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         return FALLO;
     }
 
+    //Para la actualización del ctime
+    unsigned int oldValue = inodo.numBloquesOcupados+inodo.tamEnBytesLog;
+    unsigned int newValue;
+
     //Para contar los bytes escritos
     unsigned int bytes_escritos = 0;
 
@@ -68,10 +72,14 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     if ((offset + nbytes) > inodo.tamEnBytesLog) {
         inodo.tamEnBytesLog = offset + nbytes;
     }
+    
     // Actualizar el mtime (porque hemos escrito en la zona de datos).
     inodo.mtime = time(NULL);
-    // Actualizar el ctime  (porque hemos actualizado campos del inodo).
-    inodo.ctime = time(NULL);
+    
+    // Actualizar el ctime si se ha actualizado campos del inodo
+    newValue = inodo.numBloquesOcupados+inodo.tamEnBytesLog;
+    if (newValue != oldValue) inodo.ctime = time(NULL);
+
     // Salvar el inodo con escribir_inodo().
     if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
 

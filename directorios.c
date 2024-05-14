@@ -193,6 +193,7 @@ int mi_creat(const char *camino, unsigned char permisos){
     
     if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 1, permisos)) < 0) {
         mostrar_error_buscar_entrada(error);
+        return FALLO;
     }
 
     return EXITO;
@@ -315,14 +316,14 @@ int mi_chmod(const char *camino, unsigned char permisos){
     int error;
 
     if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, permisos)) < 0) {
+        //Mostrar error
         mostrar_error_buscar_entrada(error);
-    }
-    //Si existe la entrada
-    if(error == EXITO){
+        return FALLO;
+    } else {
+        //Realizar el cambio de permisos
         mi_chmod_f(p_inodo, permisos);
         return  EXITO;
     }
-    return  FALLO;
 }
 
 int mi_stat(const char *camino, struct STAT *p_stat){
@@ -335,10 +336,14 @@ int mi_stat(const char *camino, struct STAT *p_stat){
     int error;
 
     if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)) < 0) {
+        //Mostrar error
         mostrar_error_buscar_entrada(error);
+        return FALLO;
     } else {
+        //Obtener los estados del inodo
         mi_stat_f(p_inodo, p_stat);
-       
+
+        //Imprimir parametros del STAT
         printf ("Nº de inodo: %d\n", p_inodo);
         printf ("tipo: %c\n", p_stat->tipo);
         printf ("permisos: %d\n", p_stat->permisos);
@@ -351,7 +356,6 @@ int mi_stat(const char *camino, struct STAT *p_stat){
         return EXITO;
 
     }
-    return FALLO;
 }
 
 int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
@@ -371,11 +375,13 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     }
     */
 
-
+    //Realizar la busqueda de entrada
     if((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)) < 0) {
+        //Mostrar error
         mostrar_error_buscar_entrada(error);
         return FALLO;
     } else {
+        //Escribir
         return mi_write_f(p_inodo, buf, offset, nbytes);
     }
 }
@@ -389,10 +395,13 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     unsigned int p_entrada = 0;
     int error;
 
+    //Buscar la entrada y ver que no da error, si caso de error imprimir si no leer.
     if((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)) < 0) {
+        //Mostrar error
         mostrar_error_buscar_entrada(error);
         return FALLO;
     } else {
+        //Leer
         return mi_read_f(p_inodo, buf, offset, nbytes);
     }
 
@@ -445,7 +454,7 @@ int mi_link(const char *camino1, const char *camino2){
 }
 
 int mi_unlink(const char *camino){
-  struct superbloque SB;
+    struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) return FALLO;
     unsigned int p_inodo_dir = SB.posInodoRaiz;
     unsigned int *p_inodo = 0;
@@ -471,9 +480,9 @@ int mi_unlink(const char *camino){
     leer_inodo(*p_inodo,&inodo);
     inodo.nlinks--;
     //Si no quedan enlaces se libera
-     if(inodo.nlinks==0){
+    if(inodo.nlinks==0){
         liberar_inodo(*p_inodo);
-     }
+    }
     inodo.ctime=time(NULL);
     if (escribir_inodo(*p_inodo, &inodo) == FALLO) return FALLO;
     return EXITO;
