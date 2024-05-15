@@ -1,10 +1,8 @@
 #include "directorios.h"
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 
-    if (argc < 3)
-    {
+    if (argc < 3) {
         fprintf(stderr, RED "Sintaxis: ./mi_rm disco /ruta\n" RESET);
         exit(FALLO);
     }

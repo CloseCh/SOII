@@ -198,9 +198,9 @@ int mi_read(const char *camino,void *buf, unsigned int offset, unsigned int nbyt
  *  Crea el enlace de una entrada de directorio camino2 al inodo especificado por otra entrada
  *  de directorio camino1 .
  * 
- *  const char *camino1:
+ *  const char *camino1: camino el fichero al que se va a enlazar.
  * 
- *  const char *camino2:
+ *  const char *camino2: camino del fichero a crear y enlazar con camino1;
  * 
  *  returns:
 */
