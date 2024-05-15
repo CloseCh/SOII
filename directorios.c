@@ -228,7 +228,8 @@ int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
     memset(lecValorInodo, 0, 128);
 
     //Caso fichero
-    
+    int esfichero=0; //booleano
+    if(camino[strlen(camino)-1]!='/') {esfichero=1;}
     //Caso directorio
     //Variables para leer entradas y iterar sobre ella
     unsigned int leidos = 0;
@@ -302,7 +303,41 @@ int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
     }
 
     //Para imprimir el total
-    sprintf(buffer, "Total: %ld \n",leidosTotal/sizeof(struct entrada));
+    if(esfichero==1){
+        //imprimir el tipo
+        sprintf(lecValorInodo, "f\t");
+        strcat(bufferAux, lecValorInodo);
+
+        //Imprimir los permisos en octal
+        leer_inodo(p_inodo,&inodo);
+        if (inodo.permisos & 4) strcat(bufferAux, "r"); else strcat(bufferAux, "-");
+        if (inodo.permisos & 2) strcat(bufferAux, "w"); else strcat(bufferAux, "-");
+        if (inodo.permisos & 1) strcat(bufferAux, "x"); else strcat(bufferAux, "-");
+        strcat(bufferAux,"\t\t");
+
+        //Imprimir mtime
+        struct tm *tm; 
+        tm = localtime(&inodo.mtime);
+        sprintf(lecValorInodo, "%d-%02d-%02d %02d:%02d:%02d \t", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min,  tm->tm_sec);
+        strcat(bufferAux, lecValorInodo);
+
+        //Imprimir tamaño
+        sprintf(lecValorInodo, "%d\t",inodo.tamEnBytesLog);
+        strcat(bufferAux, lecValorInodo);
+
+        //Imprimir nombre
+        char *tokenp= (char *) camino;
+        char *token = strtok(tokenp, "/");
+        while (token != NULL) {
+        tokenp=token;
+        token = strtok(NULL, "/");
+        }
+        sprintf(lecValorInodo, LGREEN"%s\n"RESET,tokenp);
+        strcat(bufferAux, lecValorInodo);
+
+    }else{
+        sprintf(buffer, "Total: %ld \n",leidosTotal/sizeof(struct entrada));
+    }
     strcat(buffer, bufferAux);
     return EXITO;
 }
