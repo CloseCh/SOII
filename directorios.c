@@ -248,7 +248,7 @@ int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
 
     //Imprimir total
     //Primera parte, lectura
-    while ((leidos = mi_read_f(p_inodo, entradas, leidosTotal, BLOCKSIZE)) != 0){
+    while ((leidos = mi_read_f(p_inodo, entradas, leidosTotal, BLOCKSIZE)) != 0 && esfichero != 1){
         leidosTotal += leidos;
 
         //Segunda parte que itera sobre lo leido con mi_read_f
