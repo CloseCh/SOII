@@ -31,6 +31,7 @@ int main(int argc, char **argv){
         //Imprimir lo que se ha leido
         write(1,buffer_texto, leidos);
         totalLeidos += leidos;
+        leidos = 0;
 
         //Limpiar el buffer, asi se filtra la basura
         memset(buffer_texto, 0, tambuffer);
