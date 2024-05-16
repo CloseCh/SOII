@@ -13,6 +13,7 @@
 #define ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO (-8)
 #define TAMNOMBRE 60 //tamaño del nombre de directorio o fichero, en Ext2 = 256
 #define PROFUNDIDAD 32
+#define ENTRADA_ARRAY_SIZE (BLOCKSIZE/(TAMNOMBRE+sizeof(unsigned int)))
 
 #define TAMFILA 100
 #define TAMBUFFER (TAMFILA*1000)

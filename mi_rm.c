@@ -3,23 +3,34 @@
 int main(int argc, char **argv) {
 
     if (argc < 3) {
-        fprintf(stderr, RED "Sintaxis: ./mi_rm disco /ruta\n" RESET);
+        fprintf(stderr, RED "Sintaxis: ./mi_rm <dispositivo> </ruta_fichero>\n" RESET);
         exit(FALLO);
     }
 
-    // Montamos el disco
-    bmount(argv[1]);
+    char *ruta = argv[2];
+    char *dispositivo = argv[1];
+
+    //Comprobar que no es un directorio
+    if (ruta[strlen(ruta)-1] == '/'){
+        fprintf(stderr, RED"No es un fichero\n"RESET);
+        exit(FALLO);
+    }
+
     // No se ha de poder borrar el directorio raíz
-    if(strcmp(argv[2],"/")==0){
+    if(strcmp(ruta, "/")==0){
         fprintf(stderr, RED "No se puede borrar el directorio raíz\n" RESET);
         exit(FALLO);
     } 
     
+    // Montamos el disco
+    bmount(dispositivo);
+
     // Llamada al  mi_unlink
-    mi_unlink(argv[2]);
+    if (mi_unlink(ruta) == FALLO)
+        return FALLO;
 
     // Desmontar el disco
-    bumount(argv[1]);
+    bumount();
 
     return EXITO;
 }
