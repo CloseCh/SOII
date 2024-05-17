@@ -7,7 +7,8 @@
 #include <unistd.h> // SEEK_SET, read(), write(), open(), close(), lseek()
 #include <errno.h>  //errno
 #include <string.h> // strerror()
-
+#include <sys/wait.h>
+#include <signal.h>
 
 #define BLOCKSIZE 1024 // bytes
 
@@ -43,7 +44,7 @@
 #define DEBUGN7     0
 #define DEBUGN8     1
 #define DEBUGN9     1
-#define DEBUGN10    1
+#define DEBUGN12    1
 
 /*
  * Function: bmount

@@ -11,6 +11,11 @@ int bmount(const char *camino){
     //No aparecen permisos desenmascarar
     umask(000);
 
+    //Para los procesos hijo
+    if (descriptor > 0){
+        close(descriptor);
+    }
+
     //open(camino,oflags,mode)
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
     if (descriptor == -1) {
@@ -20,7 +25,7 @@ int bmount(const char *camino){
 
     //Inicializar semaforo
     if (!mutex) { // el semáforo es único en el sistema y sólo se ha de inicializar 1 vez (padre)
-        mutex = initSem(); 
+        mutex = initSem(); //lo inicializa a 1
         if (mutex == SEM_FAILED) {
             return -1;
         }
@@ -30,10 +35,16 @@ int bmount(const char *camino){
 }
 
 int bumount(){
+    descriptor = close(descriptor); //close() devuelve 0 en caso de éxito
+    
+    if (descriptor == -1){
+        fprintf(stderr, RED"Error al desmontar dispositivo\n"RESET);
+    }
+    
     //Eliminar semaforo
     deleteSem(); 
 
-    return close(descriptor);
+    return descriptor;
 }
 
 int bwrite(unsigned int nbloque, const void *buf){
