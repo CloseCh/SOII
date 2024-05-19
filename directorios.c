@@ -186,6 +186,7 @@ void mostrar_error_buscar_entrada(int error) {
 }
 
 int mi_creat(const char *camino, unsigned char permisos){
+    mi_waitSem();
     struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
@@ -196,9 +197,10 @@ int mi_creat(const char *camino, unsigned char permisos){
     
     if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 1, permisos)) < 0) {
         mostrar_error_buscar_entrada(error);
+         mi_signalSem();
         return FALLO;
     }
-
+    mi_signalSem();
     return EXITO;
 }
 
@@ -453,6 +455,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
 }
 
 int mi_link(const char *camino1, const char *camino2){
+    mi_waitSem();
     struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
@@ -465,15 +468,20 @@ int mi_link(const char *camino1, const char *camino2){
     //comprobar que la entrada camino1 exista
     if((error = buscar_entrada(camino1, &p_inodo_dir1, &p_inodo1, &p_entrada1, 0, 6)) < 0) {
         mostrar_error_buscar_entrada(error);
+        mi_signalSem();
         return FALLO;
     }
 
     //comprobar que tiene permiso de lectura con el valor retornado ya se comprueba en buscar_entrada
-    if (error == ERROR_PERMISO_LECTURA) return FALLO;
+    if (error == ERROR_PERMISO_LECTURA){ 
+        mi_signalSem();
+        return FALLO;
+        }
 
     //mirar que la entrada de camino2 no exista
     if ((error = buscar_entrada(camino2, &p_inodo_dir2, &p_inodo2, &p_entrada2, 1, 6)) < 0){
         fprintf(stderr, RED"Entrada ya existente \n"RESET);
+        mi_signalSem();
         return FALLO;
     }
 
@@ -488,36 +496,43 @@ int mi_link(const char *camino1, const char *camino2){
     offset += posEntrada_EnArray * sizeof(struct entrada);
 
     //Leer la entrada
-    if (mi_read_f(p_inodo_dir2, &entrada, offset, sizeof(struct entrada)) == FALLO)
+    if (mi_read_f(p_inodo_dir2, &entrada, offset, sizeof(struct entrada)) == FALLO){
+        mi_signalSem();
         return FALLO;
-
+    }
     //Modificar el correspondiente
     entrada.ninodo = p_inodo1;
 
     //Calcular el offset de escritura y escribir solo la entrada
-    if (mi_write_f(p_inodo_dir2, &entrada, offset, sizeof(struct entrada)) == FALLO)
+    if (mi_write_f(p_inodo_dir2, &entrada, offset, sizeof(struct entrada)) == FALLO){
+        mi_signalSem();
         return FALLO;
-
+    }
     //Liberar inodo creadp
-    if (liberar_inodo(p_inodo2) == FALLO) 
+    if (liberar_inodo(p_inodo2) == FALLO){ 
+        mi_signalSem();
         return FALLO;
-
+    }
     //Leer inodo enlazado
-    if (leer_inodo(p_inodo1, &inodo1) == FALLO) 
+    if (leer_inodo(p_inodo1, &inodo1) == FALLO){ 
+        mi_signalSem();
         return FALLO;
-
+    }
     //Incrementar cantidad de enlaces
     inodo1.nlinks++;
 
     //Actualizamos ctime
     inodo1.ctime = time(NULL);
-    if (escribir_inodo(p_inodo1, &inodo1) == FALLO) 
+    if (escribir_inodo(p_inodo1, &inodo1) == FALLO){ 
+        mi_signalSem();
         return FALLO;
-
+    }
+    mi_signalSem();
     return EXITO;
 }
 
 int mi_unlink(const char *camino){
+    mi_waitSem();
     struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
@@ -530,31 +545,38 @@ int mi_unlink(const char *camino){
     //Comprobamos que esxita la entrada
     if((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 6)) < 0) {
         mostrar_error_buscar_entrada(error);
+        mi_signalSem();
         return FALLO;
     }
 
     //Leer inodo
-    if (leer_inodo(p_inodo, &inodo) == FALLO) 
+    if (leer_inodo(p_inodo, &inodo) == FALLO){
+        mi_signalSem();
         return FALLO;
-
+    }
     //si es directorio no vacio sali con fallo
     if(inodo.tipo == 'd' && inodo.tamEnBytesLog > 0) {
         fprintf(stderr, RED"Error: El directorio %s no está vacío \n"RESET, camino);
+        mi_signalSem();
         return FALLO;
     }
 
 
     //leer inodo padre
     struct inodo inodoPadre;
-    if (leer_inodo(p_inodo_dir, &inodoPadre) == FALLO) return FALLO;
+    if (leer_inodo(p_inodo_dir, &inodoPadre) == FALLO){
+        mi_signalSem();
+        return FALLO;
+    }
     //Obtener numero de entradas que tiene
     int nEntradas = inodoPadre.tamEnBytesLog/sizeof(struct entrada);
     
     //Si es la ultima entrada
     if (p_entrada == nEntradas-1) {
-        if (mi_truncar_f(p_inodo_dir, (nEntradas-1)*sizeof(struct entrada)) == FALLO) 
+        if (mi_truncar_f(p_inodo_dir, (nEntradas-1)*sizeof(struct entrada)) == FALLO){ 
+            mi_signalSem();
             return FALLO;
-    
+        }
     //No es la ultima entrada
     } else {
         //Leer el ultimo bloque y el bloque de la entrada a sustituir
@@ -570,28 +592,36 @@ int mi_unlink(const char *camino){
         offsetSustituto += posSustituito_enArray * sizeof(struct entrada);
 
         //Leer las entradas
-        if (mi_read_f(p_inodo_dir, &entradaUltimo, offsetUltimo, sizeof(struct entrada)) == FALLO) 
+        if (mi_read_f(p_inodo_dir, &entradaUltimo, offsetUltimo, sizeof(struct entrada)) == FALLO){ 
+            mi_signalSem();
             return FALLO;
-        
+        }
         //escribir la entrada ultima a entrada sustituido
-        if (mi_write_f(p_inodo_dir, &entradaUltimo, offsetSustituto, sizeof(struct entrada)) == FALLO)
+        if (mi_write_f(p_inodo_dir, &entradaUltimo, offsetSustituto, sizeof(struct entrada)) == FALLO){
+            mi_signalSem();
             return FALLO;
-        
+        }
         //Truncar para eliminar
-        if (mi_truncar_f(p_inodo_dir, offsetUltimo) == FALLO) 
+        if (mi_truncar_f(p_inodo_dir, offsetUltimo) == FALLO){ 
+            mi_signalSem();
             return FALLO;
+        }
     }
 
     //Decrementar el nLink de la entrada del inodo eliminado
     //Si 0 liberar inodo en otro caso actualizar y salvar
     if (--inodo.nlinks == 0) {
-        if (liberar_inodo(p_inodo) == FALLO)
+        if (liberar_inodo(p_inodo) == FALLO){
+            mi_signalSem();
             return FALLO;
+        }
     } else {
         inodo.ctime = time(NULL);
-        if (escribir_inodo(p_inodo, &inodo) == FALLO) 
+        if (escribir_inodo(p_inodo, &inodo) == FALLO){ 
+            mi_signalSem();
             return FALLO;
+        }
     }
-
+    mi_signalSem();
     return EXITO;
 }
