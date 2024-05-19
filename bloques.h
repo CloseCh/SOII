@@ -99,3 +99,6 @@ int bwrite(unsigned int nbloque, const void *buf);
  *   returns: tamaño del bloque si todo va bien, -1 si error.
  */
 int bread(unsigned int nbloque, void *buf);
+
+void mi_waitSem();
+void mi_signalSem();
