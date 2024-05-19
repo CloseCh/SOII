@@ -135,7 +135,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes)
 {
-     mi_waitSem();
+    mi_waitSem();
     struct inodo inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO){
         mi_signalSem();
@@ -144,14 +144,14 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     if ((inodo.permisos & 4) != 4)
     {
         fprintf(stderr, RED "No hay permisos de lectura\n" RESET);
-         mi_waitSem();
+        mi_signalSem();
         return FALLO;
     }
 
     unsigned int leidos = 0;
     // Comprobaciones
     if (offset >= inodo.tamEnBytesLog){
-         mi_waitSem();
+        mi_signalSem();
         return leidos;
     }
     if ((offset + nbytes) >= inodo.tamEnBytesLog)
@@ -175,7 +175,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         if (nbfisico != -1)
         {
             if (bread(nbfisico, buf_bloque) == FALLO){
-                 mi_waitSem();
+                mi_signalSem();
                 return FALLO;
             }
             memcpy(buf_original, buf_bloque + desp1, nbytes); // se ha tenido en cuenta para nbytes < BLOCKSIZE
@@ -190,7 +190,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         if (nbfisico != -1)
         {
             if (bread(nbfisico, buf_bloque) == FALLO){
-                 mi_waitSem();
+                mi_signalSem();
                 return FALLO;
             }
             memcpy(buf_original, buf_bloque + desp1, BLOCKSIZE - desp1); // Guardamos una parte
@@ -204,7 +204,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
             if (nbfisico != -1)
             {
                 if (bread(nbfisico, buf_bloque) == FALLO){
-                    mi_waitSem();
+                    mi_signalSem();
                     return FALLO;
                 }
                 memcpy(buf_original + leidos, buf_bloque, BLOCKSIZE); // Guardamos una parte
@@ -218,7 +218,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         if (nbfisico != -1)
         {
             if (bread(nbfisico, buf_bloque) == FALLO){
-                mi_waitSem();
+                mi_signalSem();
                 return FALLO;
             }
             memcpy(buf_original, buf_bloque, desp2); // Guardamos una parte
@@ -229,10 +229,10 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     inodo.atime = time(NULL);
 
     if (escribir_inodo(ninodo, &inodo) == FALLO){
-         mi_waitSem();
+        mi_signalSem();
         return FALLO;
     }
-     mi_waitSem();    
+    mi_signalSem();    
     return leidos;
 }
 

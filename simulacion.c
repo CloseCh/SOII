@@ -14,7 +14,7 @@ int main(int argc, char **argv){
 
     //Montar el dispositivo padre
     char *dispositivo = argv[1];
-    bumount(dispositivo);
+    bmount(dispositivo);
 
     //Crear el directorio : /simul_aaaammddhhmmss/
     // variables para almacenar los componentes de fecha y hora
@@ -34,8 +34,12 @@ int main(int argc, char **argv){
 
 
     char directorio[256] = "";
-    sprintf(directorio, "/simul_%d%02d%02d%02d%02d%02d/", year, month, day, hours - 12, minutes, seconds);
-    mi_creat("directorio", 6);
+    sprintf(directorio, "/simul_%d%02d%02d%02d%02d%02d/", year, month, day, hours, minutes, seconds);
+    if (mi_creat(directorio, 6) == FALLO){
+        fprintf(stderr, RED"Error: fallo al crear directorio. \n"RESET);
+        bumount();
+        exit(0);
+    }
 
     //Inicializamos acabados a 0;
     acabados = 0;
@@ -79,14 +83,14 @@ int main(int argc, char **argv){
                 registro.nRegistro = rand() % REGMAX;
 
                 //Escribir en el registro
-                if (mi_write(directorio, &registro, registro.nRegistro * sizeof(struct REGISTRO), sizeof (struct REGISTRO)) == FALLO){
+                if (mi_write(directorio, &registro, registro.nRegistro * sizeof(struct REGISTRO), sizeof(struct REGISTRO)) == FALLO){
                     fprintf(stderr, RED"Error: fallo de escritura. \n"RESET);
                     fprintf(stderr, RED"Con ruta: %s. \n"RESET, directorio);
                     bumount();
                     exit(0);
                 }
 
-                #if DEBUGN12
+                #if DEBUGN121
                     fprintf(stderr, GRAY"[simulación.c → Escritura %d en %s]\n"RESET, i, directorio);
                 #endif 
 
@@ -94,8 +98,8 @@ int main(int argc, char **argv){
                 usleep(50000);
             }
 
-            #if DEBUGN12
-                fprintf(stderr, GRAY"[Proceso %d: Completadas %d escrituras en %s]\n"RESET, acabados+1,NUMESCRITURAS, directorio);
+            #if DEBUGN122
+                fprintf(stderr, GRAY"[Proceso %d: Completadas %d escrituras en %s]\n"RESET, proceso, NUMESCRITURAS, directorio);
             #endif 
             //Desmontar el dispositivo
             bumount();
@@ -123,7 +127,7 @@ void reaper(){
         acabados++;
     }
     //Para probar cual ha acabado
-    #if DEBUGN12
+    #if DEBUGN121
         fprintf(stderr, GRAY"Acabado: %d \n"RESET, acabados);
     #endif
 }

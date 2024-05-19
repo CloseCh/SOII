@@ -42,10 +42,8 @@
 #define DEBUGN4     0
 #define DEBUGN6     0
 #define DEBUGN7     0
-#define DEBUGN8     1
-#define DEBUGN9     1
-#define DEBUGN12    1
-
+#define DEBUGN121   0
+#define DEBUGN122   1
 /*
  * Function: bmount
  * ----------------------------
@@ -101,4 +99,5 @@ int bwrite(unsigned int nbloque, const void *buf);
 int bread(unsigned int nbloque, void *buf);
 
 void mi_waitSem();
+
 void mi_signalSem();
