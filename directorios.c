@@ -37,8 +37,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     char inicial[sizeof(entrada.nombre)];
     char final[strlen(camino_parcial)];
     char tipo[2];
-    unsigned int leidos, totalLeido, totalBits;
-    int pos_entrada, total_entrada;
+    unsigned int leidos, totalLeido;
+    int cant_entradas_inodo, num_entrada_inodo;
 
     if(strcmp(camino_parcial, "/")==0){ // si es el directorio raíz
         struct superbloque SB;
@@ -73,23 +73,21 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     memset(bufferEntrada, 0, BLOCKSIZE);
 
     //Inicializar variables
-    totalBits = inodo_dir.tamEnBytesLog;
     leidos = totalLeido = 0;
-
-    pos_entrada = 0;
-    total_entrada = totalBits / sizeof(struct entrada);
+    num_entrada_inodo = 0;
+    cant_entradas_inodo = inodo_dir.tamEnBytesLog / sizeof(struct entrada);
 
     int iterador = 0;
 
-    if (totalBits > 0) {
+    if (cant_entradas_inodo > 0) {
         if ((leidos = mi_read_f(*p_inodo_dir, bufferEntrada, totalLeido, BLOCKSIZE)) == FALLO) 
             return FALLO;
         totalLeido += leidos;
 
-        while (pos_entrada < total_entrada && strcmp(inicial, entrada.nombre) != 0) {
+        while (num_entrada_inodo <= cant_entradas_inodo && strcmp(inicial, entrada.nombre) != 0) {
             entrada = bufferEntrada[iterador];
             iterador++;
-            pos_entrada++;
+            num_entrada_inodo++;
 
             //Si llega al final de un bloque de entradas reinicia
             if (iterador == ENTRADA_ARRAY_SIZE) {
@@ -102,9 +100,10 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                 totalLeido += leidos;
             }
         }
+        num_entrada_inodo--;
     }
 
-    if (strcmp(inicial, entrada.nombre) != 0 && pos_entrada == total_entrada){
+    if (strcmp(inicial, entrada.nombre) != 0 && num_entrada_inodo == cant_entradas_inodo){
         //la entrada no existe
         switch (reservar) {
         case 0: // modo consulta. Como no existe retornamos error
@@ -163,7 +162,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
                 //Finaliza la recursividad
                 *p_inodo = entrada.ninodo;
-                *p_entrada = pos_entrada;
+                *p_entrada = num_entrada_inodo;
                 return EXITO;
             }
         }
@@ -171,13 +170,13 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
     //La recursividad se acaba si final == "/" o ""
     if ((strcmp(final, "/") == 0) || (strcmp(final, "") == 0)) {
-        if(pos_entrada < total_entrada && reservar == 1){
+        if(num_entrada_inodo <= cant_entradas_inodo && reservar == 1){
             //modo escritura y la entrada ya existe
             return ERROR_ENTRADA_YA_EXISTENTE;
         }
 
         //cortamos la recusividad
-        *p_entrada = pos_entrada;
+        *p_entrada = num_entrada_inodo;
         *p_inodo = entrada.ninodo;
         return EXITO;
     } else {
