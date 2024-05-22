@@ -1,4 +1,8 @@
 #include "verificacion.h"
+/* Weiyu primero queremos que sepas que eres un crack,
+Segundo, nuestro código no tiene warnings :)
+y tercero no funciona :(
+*/    
 
 int main (int argc, char **argv){
     //Verificación de sintaxis
