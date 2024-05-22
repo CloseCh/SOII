@@ -16,6 +16,17 @@ int main(int argc, char **argv){
 
     mi_stat(ruta, &estado);
 
+    //Imprimir parametros del STAT
+        printf ("Nº de inodo: %d\n", estado.nInodo);
+        printf ("tipo: %c\n", estado.tipo);
+        printf ("permisos: %d\n", estado.permisos);
+        printf ("atime: %s", ctime(&estado.atime));
+        printf ("ctime: %s", ctime(&estado.ctime));
+        printf ("mtime: %s", ctime(&estado.mtime));
+        printf ("nlinks: %d\n", estado.nlinks);
+        printf ("tamEnBytesLog: %d\n", estado.tamEnBytesLog);
+        printf ("numBloquesOcupados: %d\n", estado.numBloquesOcupados);
+
     bumount();
 
     return EXITO;

@@ -242,6 +242,8 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat)
     if (leer_inodo(ninodo, &inodo) == FALLO)
         return FALLO;
 
+    p_stat->nInodo = ninodo;
+
     p_stat->tipo = inodo.tipo;
     p_stat->permisos = inodo.permisos;
 

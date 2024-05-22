@@ -1,6 +1,7 @@
 #include "ficheros_basico.h"
 
 struct STAT {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
+    unsigned int nInodo;
     unsigned char tipo;     // Tipo ('l':libre, 'd':directorio o 'f':fichero)
     unsigned char permisos; // Permisos (lectura y/o escritura y/o ejecución)
 
