@@ -33,7 +33,7 @@ int main(int argc, char **argv){
     year = local->tm_year + 1900;   // obtener el año desde 1900
 
 
-    char directorio[256] = "";
+    char directorio[512] = "";
     sprintf(directorio, "/simul_%d%02d%02d%02d%02d%02d/", year, month, day, hours, minutes, seconds);
     if (mi_creat(directorio, 6) == FALLO){
         fprintf(stderr, RED"Error: fallo al crear directorio. \n"RESET);
@@ -73,7 +73,8 @@ int main(int argc, char **argv){
             // Inicializar la semilla de números aleatorios
             srand(time(NULL) + getpid());
 
-            for (int i = 0; i < NUMESCRITURAS; i++){
+            int i;
+            for (i = 0; i < NUMESCRITURAS; i++){
                 //Inicilizar registro
                 struct REGISTRO registro;
 
@@ -99,7 +100,7 @@ int main(int argc, char **argv){
             }
 
             #if DEBUGN122
-                fprintf(stderr, GRAY"[Proceso %d: Completadas %d escrituras en %s]\n"RESET, proceso, NUMESCRITURAS, directorio);
+                fprintf(stderr, GRAY"[Proceso %d: Completadas %d escrituras en %s]\n"RESET, proceso, i, directorio);
             #endif 
             //Desmontar el dispositivo
             bumount();
