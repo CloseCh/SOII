@@ -10,7 +10,7 @@ int main(int argc, char **argv){
     int permisos = atoi(argv[2]);
 
     if (permisos < 0 || permisos > 7){
-        fprintf(stderr, RED"permisos no valido, , 0 <= permisos <= 7 \n"RESET);
+        fprintf(stderr, RED"permisos no valido, 0 <= permisos <= 7 \n"RESET);
         exit(FALLO);
     }
 

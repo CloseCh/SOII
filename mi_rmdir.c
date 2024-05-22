@@ -3,15 +3,15 @@
 int main(int argc, char **argv) {
 
     if (argc < 3) {
-        fprintf(stderr, RED "Sintaxis: ./mi_rm <dispositivo> </ruta_fichero>\n" RESET);
+        fprintf(stderr, RED "Sintaxis: ./mi_rmdir <dispositivo> </ruta_directorio>\n" RESET);
         exit(FALLO);
     }
 
     char *ruta = argv[2];
     char *dispositivo = argv[1];
 
-    //Comprobar que no es un directorio
-    if (ruta[strlen(ruta)-1] == '/'){
+    //Comprobar que es un directorio
+    if (ruta[strlen(ruta)-1] != '/'){
         fprintf(stderr, RED"No es un fichero\n"RESET);
         exit(FALLO);
     }

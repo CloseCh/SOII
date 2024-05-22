@@ -7,7 +7,8 @@
 #include <unistd.h> // SEEK_SET, read(), write(), open(), close(), lseek()
 #include <errno.h>  //errno
 #include <string.h> // strerror()
-
+#include <sys/wait.h>
+#include <signal.h>
 
 #define BLOCKSIZE 1024 // bytes
 
@@ -40,9 +41,9 @@
 #define DEBUGN3     0
 #define DEBUGN4     0
 #define DEBUGN6     0
-#define DEBUGN7     1
-
-
+#define DEBUGN7     0
+#define DEBUGN121   0
+#define DEBUGN122   1
 /*
  * Function: bmount
  * ----------------------------
@@ -96,3 +97,7 @@ int bwrite(unsigned int nbloque, const void *buf);
  *   returns: tamaño del bloque si todo va bien, -1 si error.
  */
 int bread(unsigned int nbloque, void *buf);
+
+void mi_waitSem();
+
+void mi_signalSem();
