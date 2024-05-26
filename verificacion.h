@@ -10,3 +10,5 @@ struct INFORMACION {
     struct REGISTRO MenorPosicion;
     struct REGISTRO MayorPosicion;
 };
+
+int escribirInforme(const char *camino, struct INFORMACION info, unsigned int escrito);
