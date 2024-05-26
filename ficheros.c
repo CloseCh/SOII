@@ -1,7 +1,7 @@
 #include "ficheros.h"
 
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes)
-{
+{   
     mi_waitSem();
     struct inodo inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO)
@@ -133,16 +133,15 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     return bytes_escritos;
 }
 
-int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes)
-{
+int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes) {
     mi_waitSem();
     struct inodo inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO){
         mi_signalSem();
         return FALLO;
-        }
-    if ((inodo.permisos & 4) != 4)
-    {
+    }
+
+    if ((inodo.permisos & 4) != 4){
         fprintf(stderr, RED "No hay permisos de lectura\n" RESET);
         mi_signalSem();
         return FALLO;
@@ -170,11 +169,9 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     unsigned int nbfisico = traducir_bloque_inodo(&inodo, primerBL, 0);
 
     // Mismos casos que mi_write, en vez de escribir lee
-    if (primerBL == ulitmoBL)
-    {
-        if (nbfisico != -1)
-        {
-            if (bread(nbfisico, buf_bloque) == FALLO){
+    if (primerBL == ulitmoBL) {
+        if (nbfisico != -1) {
+            if (bread(nbfisico, buf_bloque) == FALLO) {
                 mi_signalSem();
                 return FALLO;
             }
@@ -182,14 +179,11 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         }
         leidos += nbytes;
         // caso2: hay que escribir en más de un bloque
-    }
-    else
-    {
+    } else {
 
         // Fase 1: leemos el primer bloque teniendo en cuenta el desplazamiento
-        if (nbfisico != -1)
-        {
-            if (bread(nbfisico, buf_bloque) == FALLO){
+        if (nbfisico != -1) {
+            if (bread(nbfisico, buf_bloque) == FALLO) {
                 mi_signalSem();
                 return FALLO;
             }
@@ -198,12 +192,10 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         leidos += BLOCKSIZE - desp1;
 
         // Fase 2: Un bucle hasta llegar a un bloque menor que nbytes
-        for (int bl = primerBL + 1; bl < ulitmoBL; bl++)
-        {
+        for (int bl = primerBL + 1; bl < ulitmoBL; bl++) {
             nbfisico = traducir_bloque_inodo(&inodo, bl, 0);
-            if (nbfisico != -1)
-            {
-                if (bread(nbfisico, buf_bloque) == FALLO){
+            if (nbfisico != -1) {
+                if (bread(nbfisico, buf_bloque) == FALLO) {
                     mi_signalSem();
                     return FALLO;
                 }
@@ -221,7 +213,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
                 mi_signalSem();
                 return FALLO;
             }
-            memcpy(buf_original, buf_bloque, desp2); // Guardamos una parte
+            memcpy(buf_original + leidos, buf_bloque, desp2); // Guardamos una parte
         }
         leidos += desp2 + 1;
     }
