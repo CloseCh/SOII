@@ -16,7 +16,7 @@ int main(int argc, char **argv){
     char *dispositivo = argv[1];
     bmount(dispositivo);
 
-    //Crear el directorio : /simul_aaaammddhhmmss/
+    // Crear el directorio : /simul_aaaammddhhmmss/
     // variables para almacenar los componentes de fecha y hora
     int hours, minutes, seconds, day, month, year;
     time_t now; // Obtener la hora actual
@@ -32,11 +32,11 @@ int main(int argc, char **argv){
     month = local->tm_mon + 1;      // obtener el mes del año (0 a 11)
     year = local->tm_year + 1900;   // obtener el año desde 1900
 
-
-    char directorio[512] = "";
+    char directorio[512];
+    memset(directorio, 0, 512);
     sprintf(directorio, "/simul_%d%02d%02d%02d%02d%02d/", year, month, day, hours, minutes, seconds);
     if (mi_creat(directorio, 6) == FALLO){
-        fprintf(stderr, RED"Error: fallo al crear directorio. \n"RESET);
+        fprintf(stderr, RED"Error: fallo al crear directorio\n"RESET);
         bumount();
         exit(0);
     }
@@ -46,17 +46,19 @@ int main(int argc, char **argv){
 
     for (int proceso = 1; proceso <= NUMPROCESOS; proceso++){
         int pid = fork();
+
         if (pid == 0){
             // Montar el dispositivo.
             bmount(dispositivo);
 
             //Crear el directorio del proceso hijo añadiendo el PID al nombre.
             char ruta[64] = "";
+            memset(ruta, 0, 64);
             sprintf(ruta, "proceso_%d/",getpid());
             strcat(directorio, ruta);
 
             if (mi_creat(directorio, 6) == FALLO){
-                fprintf(stderr, RED"Error: fallo al crear directorio. \n"RESET);
+                fprintf(stderr, RED"Error: fallo al crear directorio\n"RESET);
                 bumount();
                 exit(0);
             }
@@ -64,12 +66,11 @@ int main(int argc, char **argv){
             //Crear el fichero prueba.dat dentro del directorio anterior.
             strcat(directorio, "prueba.dat");
             if (mi_creat(directorio, 6) == FALLO){
-                fprintf(stderr, RED"Error: fallo al crear el fichero. \n"RESET);
+                fprintf(stderr, RED"Error: fallo al crear el fichero\n"RESET);
                 fprintf(stderr, RED"Con ruta: %s. \n"RESET, directorio);
                 bumount();
                 exit(0);
             }
-
             // Inicializar la semilla de números aleatorios
             srand(time(NULL) + getpid());
 
@@ -85,8 +86,8 @@ int main(int argc, char **argv){
 
                 //Escribir en el registro
                 if (mi_write(directorio, &registro, registro.nRegistro * sizeof(struct REGISTRO), sizeof(struct REGISTRO)) == FALLO){
-                    fprintf(stderr, RED"Error: fallo de escritura. \n"RESET);
-                    fprintf(stderr, RED"Con ruta: %s. \n"RESET, directorio);
+                    fprintf(stderr, RED"Error: fallo de escritura\n"RESET);
+                    fprintf(stderr, RED"Con ruta: %s\n"RESET, directorio);
                     bumount();
                     exit(0);
                 }
@@ -95,6 +96,9 @@ int main(int argc, char **argv){
                     fprintf(stderr, GRAY"[simulación.c → Escritura %d en %s]\n"RESET, i, directorio);
                 #endif 
 
+                //Limpiar registro
+                memset(&registro, 0, sizeof(registro));
+                
                 //Esperar 0.05 seg para la siguiente escritura
                 usleep(50000);
             }
