@@ -51,8 +51,8 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     }
     
     //Limpiar los buffers antes de ejecutar la función, ya que si no hay basura en los buffers
-    memset(inicial, 0, sizeof(inicial));
-    memset(final, 0, sizeof(final));
+    memset(inicial, '\0', sizeof(inicial));
+    memset(final, '\0', sizeof(final));
     if (extraer_camino(camino_parcial, inicial, final, tipo) == FALLO) return ERROR_CAMINO_INCORRECTO;
     #if DEBUGN7
         fprintf(stderr, 
@@ -204,7 +204,9 @@ void mostrar_error_buscar_entrada(int error) {
 
 int mi_creat(const char *camino, unsigned char permisos){
     mi_waitSem();
-    
+    char ruta[strlen(camino)];
+    strcpy(ruta,camino);
+
     struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
@@ -213,7 +215,7 @@ int mi_creat(const char *camino, unsigned char permisos){
     unsigned int p_entrada = 0;
     int error;
     
-    if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 1, permisos)) < 0) {
+    if ((error = buscar_entrada(ruta, &p_inodo_dir, &p_inodo, &p_entrada, 1, permisos)) < 0) {
         mostrar_error_buscar_entrada(error);
         mi_signalSem();
         return FALLO;
