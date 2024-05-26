@@ -213,7 +213,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
                 mi_signalSem();
                 return FALLO;
             }
-            memcpy(buf_original + leidos, buf_bloque, desp2); // Guardamos una parte
+            memcpy(buf_original + leidos, buf_bloque, desp2 + 1); // Guardamos una parte
         }
         leidos += desp2 + 1;
     }
