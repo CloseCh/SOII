@@ -7,6 +7,13 @@ int main(int argc, char **argv){
         exit(FALLO);
     }
 
+    unsigned int finDV = atoi(argv[2])*BLOCKSIZE - 1; 
+    // último byte del dispositivo virtual
+    FILE *fp = fopen(argv[1], "w");
+    fseek(fp, finDV , SEEK_SET);
+    fputc('\0', fp); 
+    fclose(fp);
+
     //montar el dispositivo virtual
     bmount(argv[1]);
 
