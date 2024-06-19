@@ -25,11 +25,13 @@ static unsigned int inside_sc = 0;
 
         //open(camino,oflags,mode)
         descriptor = open(camino, O_RDWR | O_CREAT, 0666);
-        ptrSFM = do_mmap(descriptor);
+
         if (descriptor == -1) {
             fprintf(stderr, RED"Error: creacion de disco\n"RESET);
             return FALLO;
         }
+
+        ptrSFM = do_mmap(descriptor);
 
         //Inicializar semaforo
         if (!mutex) { // el semáforo es único en el sistema y sólo se ha de inicializar 1 vez (padre)
@@ -89,6 +91,7 @@ static unsigned int inside_sc = 0;
 #else
     int bumount(){
         descriptor = close(descriptor); //close() devuelve 0 en caso de éxito
+        unmap();
         
         if (descriptor == -1){
             fprintf(stderr, RED"Error al desmontar dispositivo\n"RESET);

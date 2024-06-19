@@ -46,7 +46,7 @@
 #define DEBUGN121   0
 #define DEBUGN122   1
 #define DEBUGN13    1
-#define MMAPOPEN    0
+#define MMAPOPEN    1
 
 /*
  * Function: bmount
